@@ -6,6 +6,7 @@ import urllib
 import jinja2
 import webapp2
 import increment
+import newbase60
 
 
 svgcounter = increment.Increment("svg-id", 10)
@@ -46,7 +47,7 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     page.svgBlob=blob_info.key()
     page.svgid = svgcounter.one()
     page.put()
-    self.redirect('/s/%s' % page.svgid)
+    self.redirect('/s/%s' % newbase60.numtosxg(page.svgid))
     
     
 
@@ -56,9 +57,9 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
     blob_info = blobstore.BlobInfo.get(resource)
     self.send_blob(blob_info)
 
-class SvgHandler(blobstore_handlers.BlobstoreDownloadHandler):
+class SvgHandler(webapp2.RequestHandler):
   def get(self, resource):
-    resource = int(urllib.unquote(resource))
+    resource = int(newbase60.sxgtonum(urllib.unquote(resource)))
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
     
