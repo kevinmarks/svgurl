@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <body class="h-entry">
+  <h1 class="p-name">{{name}}</h1>
+  <img class="u-photo" src="{{url}}" />
+  <p class="p-summary">{{summary}}
+  <p><time class="dt-published" datetime="{{published}}">Published: {{published}}</time> 
+  </body>
+</html>
+{% endautoescape %}
