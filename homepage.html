@@ -4,6 +4,7 @@
 <head><title>svgur.com - share SVG vector files</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="webmention" href="https://webmention.herokuapp.com/api/webmention" />
 </head>  
 <body >
   <nav><h2>svgur.com</h2> <a href="/">Add SVG</a></nav>
@@ -12,6 +13,16 @@
     <br> <input type="text" name="name">
     <br><input type="submit"  name="submit" value="Submit"> 
   </form>  
+<script id="webmention-hosted">
+  (function () {
+    var sn = document.createElement("script"), s = document.getElementsByTagName("script")[0], url;
+    url = document.querySelectorAll ? document.querySelectorAll("link[rel~=canonical]") : false;
+    url = url && url[0] ? url[0].href : false;
+    sn.type = "text/javascript"; sn.async = true;
+    sn.src = "//webmention.herokuapp.com/api/embed?url=" + encodeURIComponent(url || window.location);
+    s.parentNode.insertBefore(sn, s);
+  }());
+</script>
 </body>
 </html>
 {% endautoescape %}
