@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 {% autoescape true %}
 <html>
-  <body class="h-entry">
+<head><title>svgur.com - share SVG vector files</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>  
+<body >
+  <nav><h2>svgur.com</h2> <a href="/">Add SVG</a></nav>
   <form action="{{upload_url}}" method="POST" enctype="multipart/form-data">
     Upload File: <input type="file" accept="image/svg+xml" name="file">
     <br> <input type="text" name="name">
-    <br><input type="submit"  name="submit" value="Submit"> </form>  </body>
+    <br><input type="submit"  name="submit" value="Submit"> 
+  </form>  
+</body>
 </html>
 {% endautoescape %}

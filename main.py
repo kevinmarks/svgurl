@@ -8,6 +8,7 @@ import webapp2
 import increment
 import newbase60
 
+siteName = "http://svgur.com"
 
 svgcounter = increment.Increment("svg-id", 10)
 
@@ -26,7 +27,7 @@ class SvgPage(ndb.Model):
     svgid = ndb.IntegerProperty(indexed=True)
     svgBlob = ndb.BlobKeyProperty(indexed=True)
     published = ndb.DateTimeProperty(auto_now_add=True)
-    name = ndb.StringProperty(indexed=False)
+    name = ndb.StringProperty(indexed=True)
     summary = ndb.StringProperty(indexed=False)
     
 class MainHandler(webapp2.RequestHandler):
@@ -73,13 +74,15 @@ class SvgHandler(webapp2.RequestHandler):
     resource = int(newbase60.sxgtonum(urllib.unquote(filename)))
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
-    
+    svgStr = newbase60.numtosxg(resource)
     template = JINJA_ENVIRONMENT.get_template('svgpage.html')
     svgVals = { 'name':pages[0].name,
                 'summary':pages[0].summary,
                 'published':pages[0].published,
-                'url':'/i/'+ newbase60.numtosxg(resource)+'.svg',
-                'rawurl':'/raw/'+ str(pages[0].svgBlob)
+                'url':'/i/'+ svgStr+'.svg',
+                'rawurl':'/raw/'+ str(pages[0].svgBlob),
+                'image_link':siteName+'/s/'+svgStr,
+                'direct_link':siteName+'/i/'+ svgStr+'.svg'
                 }
     self.response.write(template.render(svgVals))    
 

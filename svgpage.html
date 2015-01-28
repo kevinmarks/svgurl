@@ -1,11 +1,26 @@
 <!DOCTYPE html>
 {% autoescape true %}
 <html>
-  <body class="h-entry">
+<head><title>{{name}} -svgur.com </title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>  
+  <body >
+  <nav><h2>svgur.com</h2> <a href="/">Add SVG</a></nav>
+  <div class="h-entry">
   <h1 class="p-name">{{name}}</h1>
   <img class="u-photo" src="{{url}}" />
   <p class="p-summary">{{summary}}
   <p><time class="dt-published" datetime="{{published}}">Published: {{published}}</time> 
+  </div>
+  <ul>
+  <li><h3>Image Link (chat, IM, email)</h3>
+  <input readonly value="{{image_link}}" type="text" >
+  <li><h3>Direct Link (chat, IM, email)</h3>
+  <input readonly value="{{direct_link}}" type="text" >
+  <li><h3>HTML (website, blog)</h3>
+  <input readonly value="&lt;a href='{{image_link}}' &gt;&lt;img src='{{direct_link}}' title='{{name}}' /&gt;&lt;/a&gt;" type="text" >
+  </ul>
   </body>
 </html>
 {% endautoescape %}
