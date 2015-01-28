@@ -50,14 +50,27 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     
 
 class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
+  def get(self, filename):
+    bits= filename.split('.')
+    key = bits[0]
+    extension = '.svg'
+    if len(bits)>1:
+        extension = bits[1]
+    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    qry = SvgPage.query(SvgPage.svgid == resource)
+    pages = qry.fetch(1)
+    blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
+    self.send_blob(blob_info)
+
+class RawServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
   def get(self, resource):
     resource = str(urllib.unquote(resource))
     blob_info = blobstore.BlobInfo.get(resource)
     self.send_blob(blob_info)
 
 class SvgHandler(webapp2.RequestHandler):
-  def get(self, resource):
-    resource = int(newbase60.sxgtonum(urllib.unquote(resource)))
+  def get(self, filename):
+    resource = int(newbase60.sxgtonum(urllib.unquote(filename)))
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
     
@@ -65,12 +78,14 @@ class SvgHandler(webapp2.RequestHandler):
     svgVals = { 'name':pages[0].name,
                 'summary':pages[0].summary,
                 'published':pages[0].published,
-                'url':'/i/'+ str(pages[0].svgBlob)
+                'url':'/i/'+ newbase60.numtosxg(resource)+'.svg',
+                'rawurl':'/raw/'+ str(pages[0].svgBlob)
                 }
     self.response.write(template.render(svgVals))    
 
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/s/([^/]+)?', SvgHandler),
                                ('/upload', UploadHandler),
-                               ('/i/([^/]+)?', ServeHandler)],
+                               ('/i/([^/]+)?', ServeHandler),
+                               ('/raw/([^/]+)?', RawServeHandler)],
                               debug=True)
