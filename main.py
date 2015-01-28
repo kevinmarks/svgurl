@@ -32,10 +32,8 @@ class SvgPage(ndb.Model):
 class MainHandler(webapp2.RequestHandler):
   def get(self):
     upload_url = blobstore.create_upload_url('/upload')
-    self.response.out.write('<html><body>')
-    self.response.out.write('<form action="%s" method="POST" enctype="multipart/form-data">' % upload_url)
-    self.response.out.write("""Upload File: <input type="file" name="file"><br> <input type="text" name="name"><br><input type="submit"
-        name="submit" value="Submit"> </form></body></html>""")
+    template = JINJA_ENVIRONMENT.get_template('homepage.html')
+    self.response.write(template.render({'upload_url':upload_url}))
 
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
   def post(self):
@@ -66,6 +64,7 @@ class SvgHandler(webapp2.RequestHandler):
     template = JINJA_ENVIRONMENT.get_template('svgpage.html')
     svgVals = { 'name':pages[0].name,
                 'summary':pages[0].summary,
+                'published':pages[0].published,
                 'url':'/i/'+ str(pages[0].svgBlob)
                 }
     self.response.write(template.render(svgVals))    
