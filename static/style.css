@@ -1,0 +1,57 @@
+[fragmention] { background-color: gold; outline: 0.375em solid gold; }
+body {font-family: "Gill Sans", Roboto,Verdana, sans-serif; }
+nav {font-size: 1.5em;}
+.h-card, .webmention-author { font-family: "Gill Sans", Roboto,Verdana, sans-serif; }
+.h-entry, .webmention-summary {max-width: 40em; line-height: 1.2em;}
+h1 { font-size: 3em; margin:0;}
+.h-cite { background-color: linen;}
+form {border: 1px solid gray; background-color: aliceblue;}
+.picframe img {border: 1px solid lightgray; background-color: white;}
+#shares {background-color: aliceblue;}
+#shares input {font-size:1.5em; width:80%; background-color: white;}
+
+.webmention-author img {height: 3em; float:left; margin:.25em;}
+.webmention-mention { margin:.5em; background-color: linen;}
+.webmention-facepile > li {
+  display: inline-block;
+  position: relative;
+  margin: 0 5px 5px 0;
+}
+.webmention-interaction-presentation:after {
+  display: block;
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  padding: 4px;
+  width: 1em;
+  height: 1em;
+
+  font-size: 1em;
+  line-height: 1;
+  text-align: center;
+
+  color: #000;
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 50px;
+}
+.webmention-interaction-like .webmention-interaction-presentation:after {content: "♥"; color:red;}
+.webmention-interaction-repost .webmention-interaction-presentation:after {content: "♺"; color:green;}
+
+.webmention-interaction-presentation > span {
+  display: block;
+  text-indent: -5000em;
+  position: relative;
+  overflow: hidden;
+  width: 3em;
+  height: 3em;
+  background: #eee;
+  border: 1px solid #ccc;
+}
+.webmention-interaction-presentation > span > img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+.webmention-facepile :link,.webmention-facepile :visited { text-decoration:none; }

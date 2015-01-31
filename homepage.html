@@ -5,21 +5,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="webmention" href="https://webmention.herokuapp.com/api/webmention" />
+<link href="/static/style.css" media="all" rel="stylesheet" type="text/css" />
 </head>  
 <body >
-  <nav><h2>svgur.com</h2> <a href="/">Add SVG</a></nav>
+  <nav><h1>svgur</h1> Upload, embed and share SVG vector files</nav>
   <form action="{{upload_url}}" method="POST" enctype="multipart/form-data">
-    Upload File: <input type="file" accept="image/svg+xml" name="file">
-    <br> <input type="text" name="name">
-    <br><input type="submit"  name="submit" value="Submit"> 
+    Upload svg: <input type="file" accept="image/svg+xml" name="file" value="Choose SVG">
+    <br>Name it:<input type="text" name="name">
+    <br><input type="submit"  name="submit" value="Share"> 
   </form>  
+<footer>made so you can easily upload, embed and share SVG vector files by <a href="http://kevinmarks.com">Kevin Marks</a>
 <script id="webmention-hosted">
   (function () {
     var sn = document.createElement("script"), s = document.getElementsByTagName("script")[0], url;
     url = document.querySelectorAll ? document.querySelectorAll("link[rel~=canonical]") : false;
     url = url && url[0] ? url[0].href : false;
     sn.type = "text/javascript"; sn.async = true;
-    sn.src = "//webmention.herokuapp.com/api/embed?url=" + encodeURIComponent(url || window.location);
+    sn.src = "//webmention.herokuapp.com/api/embed?version=cutting-edge&url=" + encodeURIComponent(url || window.location);
     s.parentNode.insertBefore(sn, s);
   }());
 </script>
