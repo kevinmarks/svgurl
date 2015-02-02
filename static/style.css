@@ -7,7 +7,7 @@ h1 { font-size: 3em; margin:0;}
 .h-cite { background-color: linen;}
 form {border: 1px solid gray; background-color: aliceblue;}
 .picframe img {border: 1px solid lightgray; background-color: white;}
-.pixpreview {border: 1px solid lightgray; background-color: white;}
+.pixpreview {border: 1px solid lightgray; background-color: white; width:15em;}
 #shares {background-color: aliceblue;}
 #shares input {font-size:1.5em; width:80%; background-color: white;}
 
