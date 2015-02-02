@@ -35,7 +35,7 @@ class MainHandler(webapp2.RequestHandler):
     upload_url = blobstore.create_upload_url('/upload')
     template = JINJA_ENVIRONMENT.get_template('homepage.html')
     qry = SvgPage.query().order(-SvgPage.published)
-    recentpix=qry.fetch(8)
+    recentpix=qry.fetch(12)
     urls = [ newbase60.numtosxg(page.svgid) for page in recentpix]
     self.response.write(template.render({'upload_url':upload_url, 'pix':urls}))
 
