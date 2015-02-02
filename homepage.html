@@ -9,10 +9,12 @@
 </head>  
 <body >
   <nav><h1>svgur</h1> Upload, embed and share SVG vector files</nav>
-  <form action="{{upload_url}}" method="POST" enctype="multipart/form-data">
-    Upload svg: <input type="file" accept="image/svg+xml" name="file" value="Choose SVG">
-    <br>Name it:<input type="text" name="name">
-    <br><input type="submit"  name="submit" value="Share"> 
+  <form id=filereader action="{{upload_url}}" method="POST" enctype="multipart/form-data">
+    <input class="choosesvg" id=file type="file" accept="image/svg+xml" name="file" value="Choose SVG">
+    <div class="hidfirst"><input type="text" name="name" placeholder="Name it"></div>
+    <div class=load-target ></div>
+    <div class="hidfirst"><textarea name="summary" placeholder="describe the image"></textarea></div>
+    <div class="hidfirst"><input type="submit"  name="submit" value="Share"></div>
   </form>  
 <footer>made so you can easily upload, embed and share SVG vector files by <a href="http://kevinmarks.com">Kevin Marks</a>
 <script id="webmention-hosted">
@@ -24,6 +26,38 @@
     sn.src = "//webmention.herokuapp.com/api/embed?version=cutting-edge&url=" + encodeURIComponent(url || window.location);
     s.parentNode.insertBefore(sn, s);
   }());
+</script>
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<script src="/static/saveSvgAsPng.js"></script>
+<script>
+  function handleFileSelect(evt) {
+    var $el = $('#filereader');
+    var files = evt.target.files;
+    for (var i = 0, f; f = files[i]; i++) {
+      var reader = new FileReader();
+      reader.onload = (function(file) {
+        return function(e) {
+          $el.find('.load-target').html(e.target.result);
+          svgAsDataUri($el.find('.load-target svg')[0], null, function(uri) {
+            $el.find('.choosesvg').hide()
+            $el.find('.hidfirst').show()
+            //$el.find('.preview').html('<img src="' + uri + '" />');
+          });
+          $el.find('.save').click(function() {
+            saveSvgAsPng($el.find('.load-target svg')[0], 'test.png');
+          });
+        }
+      })(f);
+      reader.readAsText(f);
+    }
+  }
+
+  if (window.File && window.FileReader && window.FileList && window.Blob) {
+    document.getElementById('file').addEventListener('change', handleFileSelect, false);
+  }
+  $( document ).ready(function() {
+    $('.hidfirst').hide();
+  });
 </script>
 </body>
 </html>
