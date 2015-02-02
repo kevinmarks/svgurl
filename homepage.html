@@ -10,12 +10,18 @@
 <body >
   <nav><h1>svgur</h1> Upload, embed and share SVG vector files</nav>
   <form id=filereader action="{{upload_url}}" method="POST" enctype="multipart/form-data">
-    <input class="choosesvg" id=file type="file" accept="image/svg+xml" name="file" value="Choose SVG">
-    <div class="hidfirst"><input type="text" name="name" placeholder="Name it"></div>
+    <input class="choosesvg hidafter" id=file type="file" accept="image/svg+xml" name="file" value="Choose SVG">
+    <div class="hidfirst "><input type="text" name="name" placeholder="Name it"></div>
     <div class=load-target ></div>
     <div class="hidfirst"><textarea name="summary" placeholder="describe the image"></textarea></div>
     <div class="hidfirst"><input type="submit"  name="submit" value="Share"></div>
   </form>  
+  <h2 class="hidafter">Recent Images</h2>
+  <div id="recent" class="hidafter">
+  {% for svgid in pix %}
+  <a href="/s/{{svgid}}"><img class="pixpreview hidafter"src="/i/{{svgid}}.svg" width="22%" ></img></a>
+  {% endfor %}
+  </div>
 <footer>made so you can easily upload, embed and share SVG vector files by <a href="http://kevinmarks.com">Kevin Marks</a>
 <script id="webmention-hosted">
   (function () {
@@ -39,8 +45,8 @@
         return function(e) {
           $el.find('.load-target').html(e.target.result);
           svgAsDataUri($el.find('.load-target svg')[0], null, function(uri) {
-            $el.find('.choosesvg').hide()
-            $el.find('.hidfirst').show()
+            $('.hidafter').hide();
+            $el.find('.hidfirst').show();
             //$el.find('.preview').html('<img src="' + uri + '" />');
           });
           $el.find('.save').click(function() {

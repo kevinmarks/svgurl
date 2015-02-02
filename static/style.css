@@ -1,5 +1,5 @@
 [fragmention] { background-color: gold; outline: 0.375em solid gold; }
-body {font-family: "Gill Sans", Roboto,Verdana, sans-serif; }
+body {font-family: "Gill Sans", Roboto,Verdana, sans-serif; background-color: whitesmoke;}
 nav {font-size: 1.5em;}
 .h-card, .webmention-author { font-family: "Gill Sans", Roboto,Verdana, sans-serif; }
 .h-entry, .webmention-summary {max-width: 40em; line-height: 1.2em;}
@@ -7,6 +7,7 @@ h1 { font-size: 3em; margin:0;}
 .h-cite { background-color: linen;}
 form {border: 1px solid gray; background-color: aliceblue;}
 .picframe img {border: 1px solid lightgray; background-color: white;}
+.pixpreview {border: 1px solid lightgray; background-color: white;}
 #shares {background-color: aliceblue;}
 #shares input {font-size:1.5em; width:80%; background-color: white;}
 
