@@ -82,12 +82,6 @@ class FrameHandler(blobstore_handlers.BlobstoreDownloadHandler):
     reader = blobstore.BlobReader(blob_info)
     rawsvg = reader.read().decode('utf-8')
     svgVals = { 'name':pages[0].name,
-                'summary':pages[0].summary,
-                'published':pages[0].published,
-                'url':'/i/'+ svgStr+'.svg',
-                'rawurl':'/raw/'+ str(pages[0].svgBlob),
-                'image_link':siteName+'/s/'+svgStr,
-                'direct_link':siteName+'/i/'+ svgStr+'.svg',
                 'svg': rawsvg
                 }
     self.response.write(template.render(svgVals))    
@@ -112,6 +106,7 @@ class SvgHandler(webapp2.RequestHandler):
                 'url':'/i/'+ svgStr+'.svg',
                 'rawurl':'/raw/'+ str(pages[0].svgBlob),
                 'image_link':siteName+'/s/'+svgStr,
+                'iframe_link':siteName+'/f/'+ svgStr,
                 'direct_link':siteName+'/i/'+ svgStr+'.svg'
                 }
     self.response.write(template.render(svgVals))    

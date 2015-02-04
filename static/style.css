@@ -6,9 +6,10 @@ nav {font-size: 1.5em;}
 h1 { font-size: 3em; margin:0;}
 .h-cite { background-color: linen;}
 form {border: 1px solid gray; background-color: aliceblue;}
-.picframe img {border: 1px solid lightgray; background-color: white; }
-.picgrid { margin:.5em; width:10em; height:10em; float:left; display:table-cell;vertical-align:middle; text-align:center; }
+.picframe img {border: 1px solid lightgray; background-color: white; object-fit:contain;}
+.picgrid { margin:.5em; height:10em; width:10em; float:left; display:table-cell;vertical-align:middle; text-align:center; }
 .picgrid img {width:100%; height:100%;  object-fit:contain; }
+
 #shares {background-color: aliceblue;}
 #shares input {font-size:1.5em; width:80%; background-color: white;}
 footer {clear:left;}
