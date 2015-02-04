@@ -10,7 +10,7 @@
 <body >
   <nav><h1>svgur</h1> Upload, embed and share SVG vector files</nav>
   <form id=filereader action="{{upload_url}}" method="POST" enctype="multipart/form-data">
-    <input class="choosesvg hidafter" id=file type="file" accept="image/svg+xml" name="file" value="Choose SVG">
+    <input class="choosesvg hidafter" id=file type="file" accept=".svg, image/svg+xml" name="file" value="Choose SVG">
     <div class="hidfirst "><input type="text" name="name" placeholder="Name it"></div>
     <div class=load-target ></div>
     <div class="hidfirst"><textarea name="summary" placeholder="describe the image"></textarea></div>
@@ -19,7 +19,7 @@
   <h2 class="hidafter">Recent Images</h2>
   <div id="recent" class="hidafter">
   {% for svgid in pix %}
-  <a href="/s/{{svgid}}"><img class="pixpreview hidafter"src="/i/{{svgid}}.svg" width="22%" ></img></a>
+  <div class="picframe picgrid"><a href="/s/{{svgid}}" ><img class="pixpreview"src="/i/{{svgid}}.svg"  ></img></a></div>
   {% endfor %}
   </div>
 <footer>made so you can easily upload, embed and share SVG vector files by <a href="http://kevinmarks.com">Kevin Marks</a>

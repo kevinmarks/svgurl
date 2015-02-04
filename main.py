@@ -59,12 +59,39 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
     key = bits[0]
     extension = '.svg'
     if len(bits)>1:
-        extension = bits[1]
+        extension = bits[1] #awaiting conditional code for png/jpg
     resource = int(newbase60.sxgtonum(urllib.unquote(key)))
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
     blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
     self.send_blob(blob_info)
+    
+class FrameHandler(blobstore_handlers.BlobstoreDownloadHandler):
+  def get(self, filename):
+    bits= filename.split('.')
+    key = bits[0]
+    extension = '.svg'
+    if len(bits)>1:
+        extension = bits[1] #awaiting conditional code for png/jpg
+    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    qry = SvgPage.query(SvgPage.svgid == resource)
+    pages = qry.fetch(1)
+    svgStr = newbase60.numtosxg(resource)
+    blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
+    template = JINJA_ENVIRONMENT.get_template('iframe.html')
+    reader = blobstore.BlobReader(blob_info)
+    rawsvg = reader.read().decode('utf-8')
+    svgVals = { 'name':pages[0].name,
+                'summary':pages[0].summary,
+                'published':pages[0].published,
+                'url':'/i/'+ svgStr+'.svg',
+                'rawurl':'/raw/'+ str(pages[0].svgBlob),
+                'image_link':siteName+'/s/'+svgStr,
+                'direct_link':siteName+'/i/'+ svgStr+'.svg',
+                'svg': rawsvg
+                }
+    self.response.write(template.render(svgVals))    
+
 
 class RawServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
   def get(self, resource):
@@ -93,5 +120,6 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/s/([^/]+)?', SvgHandler),
                                ('/upload', UploadHandler),
                                ('/i/([^/]+)?', ServeHandler),
+                               ('/f/([^/]+)?', FrameHandler),
                                ('/raw/([^/]+)?', RawServeHandler)],
                               debug=True)

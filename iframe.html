@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="h-entry">
+<head><title>{{name}} -svgur.com </title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+.picframe svg {width:100%; height:100%;}
+.picframe {border: 1px solid red; width:100%;height:100%; margin:0;}
+body {margin:0}
+</style>
+</head>  
+  <body>
+{% autoescape false %}
+<div class="picframe e-photo">{{svg}}</div>
+{% endautoescape %}
+  </body>
+</html>
