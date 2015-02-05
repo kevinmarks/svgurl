@@ -17,9 +17,9 @@
     <div class="hidfirst"><input type="submit"  name="submit" value="Share"></div>
   </form>  
   <h2 class="hidafter">Recent Images</h2>
-  <div id="recent" class="hidafter">
+  <div id="recent" class="hidafter h-feed">
   {% for svgid in pix %}
-  <div class="picframe picgrid"><a href="/s/{{svgid}}" ><img class="pixpreview" src="/i/{{svgid}}.svg"  ></img></a></div>
+  <div class="picframe picgrid h-entry e-content"><a class="u-url" href="/s/{{svgid}}" ><img class="pixpreview u-photo" src="/i/{{svgid}}.svg"  ></img></a></div>
   {% endfor %}
   </div>
 <footer>made so you can easily upload, embed and share SVG vector files by <a href="http://kevinmarks.com">Kevin Marks</a>
