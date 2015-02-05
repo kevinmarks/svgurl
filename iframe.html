@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 .picframe {position:fixed; margin:0; top:0px; bottom:0px; left:0px; right:0px; overflow: hidden;}
-.picframe img {width:100%; height:100%; object-fit:contain; border:0; }
+.picframe svg {width:100%; height:100%; object-fit:contain; border:0; }
 </style>
 </head>  
   <body>
-{% autoescape true %}
-<div class="picframe"><img class="u-photo" src="data:image/svg+xml;utf8,{{svg}}"></img></div>
+{% autoescape false %}
+<div class="picframe">{{svg}}</div>
 {% endautoescape %}
   </body>
 </html>
