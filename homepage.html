@@ -18,8 +18,8 @@
   </form>  
   <h2 class="hidafter">Recent Images</h2>
   <div id="recent" class="hidafter h-feed">
-  {% for svgid in pix %}
-  <div class="picframe picgrid h-entry e-content"><a class="u-url" href="/s/{{svgid}}" ><img class="pixpreview u-photo" src="/i/{{svgid}}.svg"  ></img></a></div>
+  {% for pic in pix %}
+  <div class="picframe picgrid h-entry e-content"><a class="u-url" title="{{pic.name}}" href="/s/{{pic.svgid}}" ><img class="pixpreview u-photo p-name" alt="{{pic.name}}" src="/i/{{pic.svgid}}.svg"  /></a><time class="dt-published" datetime="{{pic.published}}"></time></div>
   {% endfor %}
   </div>
 <footer>made so you can easily upload, embed and share SVG vector files by <a href="http://kevinmarks.com">Kevin Marks</a>
