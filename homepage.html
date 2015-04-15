@@ -15,11 +15,13 @@
     <div class=load-target ></div>
     <div class="hidfirst"><textarea name="summary" placeholder="describe the image"></textarea></div>
     <div class="hidfirst"><input type="submit"  name="submit" value="Share"></div>
+    <input id="pngfield" type="hidden" name="png" >
   </form>  
-  <h2 class="hidafter">Recent Images</h2>
+    <div class="preview"></div>
+    <h2 class="hidafter">Recent Images</h2>
   <div id="recent" class="hidafter h-feed">
   {% for pic in pix %}
-  <div class="picframe picgrid h-entry e-content"><a class="u-url" title="{{pic.name}}" href="/s/{{pic.svgid}}" ><img class="pixpreview u-photo p-name" alt="{{pic.name}}" src="/i/{{pic.svgid}}.svg"  /></a><time class="dt-published" datetime="{{pic.published}}"></time></div>
+  <div class="picframe picgrid h-entry"><span class="e-content"><a class="u-url" title="{{pic.name}}" href="/s/{{pic.svgid}}" ><img class="pixpreview u-photo p-name" alt="{{pic.name}}" src="/i/{{pic.svgid}}.svg"  /></a><time class="dt-published" datetime="{{pic.published}}"></time></span></div>
   {% endfor %}
   </div>
 <footer>made so you can easily upload, embed and share SVG vector files by <a href="http://kevinmarks.com">Kevin Marks</a>
@@ -47,10 +49,18 @@
           svgAsDataUri($el.find('.load-target svg')[0], null, function(uri) {
             $('.hidafter').hide();
             $el.find('.hidfirst').show();
-            //$el.find('.preview').html('<img src="' + uri + '" />');
-          });
-          $el.find('.save').click(function() {
-            saveSvgAsPng($el.find('.load-target svg')[0], 'test.png');
+            var image = new Image();
+            image.src = uri;
+            image.onload = function() {
+                var canvas = document.createElement('canvas');
+                canvas.width = image.width;
+                canvas.height = image.height;
+                var context = canvas.getContext('2d');
+                context.drawImage(image, 0, 0);
+                var pngdata = canvas.toDataURL('image/png');
+                $('.preview').html('<img src="' + pngdata + '" />');
+                $('#pngfield').value = pngdata;
+                }
           });
         }
       })(f);
