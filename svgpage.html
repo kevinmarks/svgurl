@@ -14,6 +14,14 @@
   <div class="h-entry">
   <h2 class="p-name">{{name}}</h2>
   <div class="picframe"><img id="svg" class="u-photo" src="{{url}}" /></div>
+<ul>
+  <li class="shadegrid black"><img id="svg"  src="{{url}}" /></li>
+  <li class="shadegrid grey"><img id="svg"  src="{{url}}" /></li>
+  <li class="shadegrid white"><img id="svg"  src="{{url}}" /></li>
+  <li class="shadegrid pink"><img id="svg"  src="{{url}}" /></li>
+</ul>
+<hr>
+<section class="info">
   <p class="p-summary">{{summary}}
   <p><time class="dt-published" datetime="{{published}}">Published: {{published}}</time> 
   </div>
@@ -28,6 +36,7 @@
   <li><h3>HTML iframe (website, blog)</h3>
   <input readonly value="&lt;iframe src='{{iframe_link}}' width=100% height=100% &gt;&lt;/iframe&gt;" type="text" >
   </ul>
+</section>
 <script id="webmention-hosted">
   (function () {
     var sn = document.createElement("script"), s = document.getElementsByTagName("script")[0], url;
