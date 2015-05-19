@@ -145,7 +145,8 @@ class SvgHandler(webapp2.RequestHandler):
                 'rawurl':'/raw/'+ str(pages[0].svgBlob),
                 'image_link':siteName+'/s/'+svgStr,
                 'iframe_link':siteName+'/f/'+ svgStr,
-                'direct_link':siteName+'/i/'+ svgStr+'.svg'
+                'direct_link':siteName+'/i/'+ svgStr+'.svg',
+                'png_link':siteName+'/p/'+ svgStr+'.png'
                 }
     self.response.write(template.render(svgVals))    
 
