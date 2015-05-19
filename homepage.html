@@ -15,7 +15,7 @@
     <div class=load-target ></div>
     <div class="hidfirst"><textarea name="summary" placeholder="describe the image"></textarea></div>
     <div class="hidfirst"><input type="submit"  name="submit" value="Share"></div>
-    <input id="pngfield" type="hidden" name="png" >
+    <textarea class="pngdata" name="pngfield" placeholder="png goes here">png?</textarea>
   </form>  
     <div class="preview"></div>
     <h2 class="hidafter">Recent Images</h2>
@@ -59,7 +59,7 @@
                 context.drawImage(image, 0, 0);
                 var pngdata = canvas.toDataURL('image/png');
                 $('.preview').html('<img src="' + pngdata + '" />');
-                $('#pngfield').value = pngdata;
+                $('.pngdata').html(pngdata);
                 }
           });
         }

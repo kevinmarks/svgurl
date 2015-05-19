@@ -19,6 +19,7 @@ hr {clear:left;}
 #shares {background-color: aliceblue;}
 #shares input {font-size:1.5em; width:80%; background-color: white;}
 footer {clear:left;}
+.pngdata {display:none}
 
 .webmention-author img {height: 3em; float:left; margin:.25em;}
 .webmention-mention { margin:.5em; background-color: linen;}

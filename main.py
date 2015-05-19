@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 #
 
+from __future__ import with_statement
 import os
 import urllib
 import jinja2
 import webapp2
 import increment
 import newbase60
+import base64
+from google.appengine.api import files
+
 
 siteName = "http://svgur.com"
 
@@ -20,12 +24,14 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import ndb
+from google.appengine.api import images
 
 
 class SvgPage(ndb.Model):
     """Models an individual svg page."""
     svgid = ndb.IntegerProperty(indexed=True)
     svgBlob = ndb.BlobKeyProperty(indexed=True)
+    pngBlob = ndb.BlobKeyProperty(indexed=True)
     published = ndb.DateTimeProperty(auto_now_add=True)
     name = ndb.StringProperty(indexed=True)
     summary = ndb.StringProperty(indexed=False)
@@ -48,10 +54,42 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     page.summary = self.request.get('summary',"")
     page.svgBlob=blob_info.key()
     page.svgid = svgcounter.one()
+    pngAsData = self.request.get('pngfield',"")
+    if (pngAsData):
+        png = base64.b64decode(pngAsData.split("data:image/png;base64,")[1])
+        if png:
+            # Create the file
+            file_name = files.blobstore.create(mime_type='image/png')
+
+            # Open the file and write to it
+            with files.open(file_name, 'a') as f:
+              f.write(png)
+
+            # Finalize the file. Do this before attempting to read it.
+            files.finalize(file_name)
+
+            # Get the file's blob key
+            page.pngBlob = files.blobstore.get_blob_key(file_name)
     page.put()
     self.redirect('/s/%s' % newbase60.numtosxg(page.svgid))
     
     
+class PngHandler(webapp2.RequestHandler):
+  def get(self, filename):
+    bits= filename.split('.')
+    key = bits[0]
+    extension = '.svg'
+    if len(bits)>1:
+        extension = bits[1] #awaiting conditional code for png/jpg
+    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    qry = SvgPage.query(SvgPage.svgid == resource)
+    width = str(self.request.get('width', "0"))
+    pages = qry.fetch(1)
+    if pages[0].pngBlob:
+        self.redirect(images.get_serving_url(pages[0].pngBlob)+"=s"+width+"-c")
+    else:
+        blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
+        self.send_blob(blob_info)
 
 class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
   def get(self, filename):
@@ -116,5 +154,6 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/upload', UploadHandler),
                                ('/i/([^/]+)?', ServeHandler),
                                ('/f/([^/]+)?', FrameHandler),
+                               ('/p/([^/]+)?', PngHandler),
                                ('/raw/([^/]+)?', RawServeHandler)],
                               debug=True)
