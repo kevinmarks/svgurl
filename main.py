@@ -12,7 +12,7 @@ import base64
 from google.appengine.api import files
 from google.appengine.api import app_identity
 from google.appengine.api import urlfetch
-
+from google.appengine.api import taskqueue
 
 import logging
 import cloudstorage as gcs
@@ -81,9 +81,11 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
             logging.info("png file %s" % page.pngFile)
     page.put()
     self.redirect('/s/%s' % newbase60.numtosxg(page.svgid))
+    taskqueue.add(url='/makepingfromsvg/%s' % newbase60.numtosxg(page.svgid))
     
 class PngToSvgHandler(webapp2.RequestHandler):
-  def get(self, filename):
+  def post(self, filename):
+    status="pending"
     bits= filename.split('.')
     key = bits[0]
     extension = '.png'
@@ -94,10 +96,8 @@ class PngToSvgHandler(webapp2.RequestHandler):
     width = str(self.request.get('width', "0"))
     pages = qry.fetch(1)
     page = pages[0]
-    if page.pngBlob:
-        self.redirect(images.get_serving_url(pages[0].pngBlob)+"=s"+width+"-c")
-    #elif page.pngFile:
-    #    self.redirect(images.get_serving_url(pages[0].pngFile))
+    if  page.pngFile:
+        status="file exists"
     else:
         urlbits= list(urlparse.urlsplit(self.request.uri))
         urlbits[2] = '/i/'+key+'.svg'
@@ -108,7 +108,8 @@ class PngToSvgHandler(webapp2.RequestHandler):
         result = urlfetch.fetch(url)
         if result.status_code == 200:
           rawpng= result.content
-        
+        else:
+            status="error from service" +result.status_code
         if (rawpng):
             logging.info(" png %s" % rawpng[0:256])
             bucket_name = os.environ.get('BUCKET_NAME',
@@ -120,10 +121,10 @@ class PngToSvgHandler(webapp2.RequestHandler):
             # Get the file's blob key
             #page.pngBlob = blobstore.create_gs_key("/gs"+ filename)
             page.pngFile =  blobstore.create_gs_key("/gs"+ filename)
-            logging.info("png file %s" % page.pngFile)
+            status="file created"
             page.put()
-            self.redirect(images.get_serving_url(pages[0].pngFile))
-        return 
+    logging.info("PngToSvgHandler "+ key +" status: " + status)
+    self.response.write(status) 
 
     
 class PngHandler(webapp2.RequestHandler):
