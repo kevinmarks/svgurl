@@ -10,7 +10,13 @@ import increment
 import newbase60
 import base64
 from google.appengine.api import files
+from google.appengine.api import app_identity
+from google.appengine.api import urlfetch
 
+
+import logging
+import cloudstorage as gcs
+import urlparse
 
 siteName = "http://svgur.com"
 
@@ -32,6 +38,7 @@ class SvgPage(ndb.Model):
     svgid = ndb.IntegerProperty(indexed=True)
     svgBlob = ndb.BlobKeyProperty(indexed=True)
     pngBlob = ndb.BlobKeyProperty(indexed=True)
+    pngFile = ndb.StringProperty(indexed=False)
     published = ndb.DateTimeProperty(auto_now_add=True)
     name = ndb.StringProperty(indexed=True)
     summary = ndb.StringProperty(indexed=False)
@@ -54,31 +61,76 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     page.summary = self.request.get('summary',"")
     page.svgBlob=blob_info.key()
     page.svgid = svgcounter.one()
-    pngAsData = self.request.get('pngfield',"")
+    pngAsData = None #self.request.get('pngfield',"")
     if (pngAsData):
-        png = base64.b64decode(pngAsData.split("data:image/png;base64,")[1])
-        if png:
-            # Create the file
-            file_name = files.blobstore.create(mime_type='image/png')
-
-            # Open the file and write to it
-            with files.open(file_name, 'a') as f:
-              f.write(png)
-
-            # Finalize the file. Do this before attempting to read it.
-            files.finalize(file_name)
-
+        logging.info("got pngAsData length %i" %len(pngAsData))
+        rawpng = base64.decodestring(pngAsData.split("data:image/png;base64,")[1])
+        logging.info("decoded png length %i" %len(rawpng))
+        logging.info("raw data png %s" % pngAsData[0:256])
+        logging.info("decoded png %s" % rawpng[0:256])
+        if rawpng:
+            bucket_name = os.environ.get('BUCKET_NAME',
+                                         app_identity.get_default_gcs_bucket_name())
+            filename = '/' + bucket_name + '/p/%s.png' % newbase60.numtosxg(page.svgid)
+            gcs_file = gcs.open(filename, 'w', content_type='image/png')
+            gcs_file.write(rawpng)
+            gcs_file.close()
             # Get the file's blob key
-            page.pngBlob = files.blobstore.get_blob_key(file_name)
+            #page.pngBlob = blobstore.create_gs_key("/gs"+ filename)
+            page.pngFile =  blobstore.create_gs_key("/gs"+ filename)
+            logging.info("png file %s" % page.pngFile)
     page.put()
     self.redirect('/s/%s' % newbase60.numtosxg(page.svgid))
     
+class PngToSvgHandler(webapp2.RequestHandler):
+  def get(self, filename):
+    bits= filename.split('.')
+    key = bits[0]
+    extension = '.png'
+    if len(bits)>1:
+        extension = bits[1] #awaiting conditional code for png/jpg
+    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    qry = SvgPage.query(SvgPage.svgid == resource)
+    width = str(self.request.get('width', "0"))
+    pages = qry.fetch(1)
+    page = pages[0]
+    if page.pngBlob:
+        self.redirect(images.get_serving_url(pages[0].pngBlob)+"=s"+width+"-c")
+    #elif page.pngFile:
+    #    self.redirect(images.get_serving_url(pages[0].pngFile))
+    else:
+        urlbits= list(urlparse.urlsplit(self.request.uri))
+        urlbits[2] = '/i/'+key+'.svg'
+        urlbits[3] = ''
+        svgurl= urlparse.urlunsplit(urlbits)
+        url = "https://savageping.herokuapp.com/u?" + urllib.urlencode({"url":svgurl,"width":1024})
+        urlfetch.set_default_fetch_deadline(180)
+        result = urlfetch.fetch(url)
+        if result.status_code == 200:
+          rawpng= result.content
+        
+        if (rawpng):
+            logging.info(" png %s" % rawpng[0:256])
+            bucket_name = os.environ.get('BUCKET_NAME',
+                                         app_identity.get_default_gcs_bucket_name())
+            filename = '/' + bucket_name + '/p/%s.png' % newbase60.numtosxg(page.svgid)
+            gcs_file = gcs.open(filename, 'w', content_type='image/png')
+            gcs_file.write(rawpng)
+            gcs_file.close()
+            # Get the file's blob key
+            #page.pngBlob = blobstore.create_gs_key("/gs"+ filename)
+            page.pngFile =  blobstore.create_gs_key("/gs"+ filename)
+            logging.info("png file %s" % page.pngFile)
+            page.put()
+            self.redirect(images.get_serving_url(pages[0].pngFile))
+        return 
+
     
 class PngHandler(webapp2.RequestHandler):
   def get(self, filename):
     bits= filename.split('.')
     key = bits[0]
-    extension = '.svg'
+    extension = '.png'
     if len(bits)>1:
         extension = bits[1] #awaiting conditional code for png/jpg
     resource = int(newbase60.sxgtonum(urllib.unquote(key)))
@@ -87,9 +139,10 @@ class PngHandler(webapp2.RequestHandler):
     pages = qry.fetch(1)
     if pages[0].pngBlob:
         self.redirect(images.get_serving_url(pages[0].pngBlob)+"=s"+width+"-c")
+    elif pages[0].pngFile:
+        self.redirect(images.get_serving_url(pages[0].pngFile))
     else:
-        blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
-        self.send_blob(blob_info)
+        self.redirect('/s/'+filename)
 
 class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
   def get(self, filename):
@@ -156,5 +209,6 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/i/([^/]+)?', ServeHandler),
                                ('/f/([^/]+)?', FrameHandler),
                                ('/p/([^/]+)?', PngHandler),
+                               ('/makepingfromsvg/([^/]+)?', PngToSvgHandler),
                                ('/raw/([^/]+)?', RawServeHandler)],
                               debug=True)

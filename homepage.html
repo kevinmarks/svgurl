@@ -54,11 +54,11 @@
             image.onload = function() {
                 var canvas = document.createElement('canvas');
                 // use current magic sizes for facebook twitter ie 1200, but preserve ratio
-                canvas.width = 1200; //image.width;
-                canvas.height = 1200*image.height/image.width; //image.height;
+                canvas.width = image.width; //1200; //image.width;
+                canvas.height = image.height;//1200*image.height/image.width; //image.height;
                 var context = canvas.getContext('2d');
                 // 
-                context.drawImage(image, 0, 0,1200,canvas.height); //will need a fitrect
+                context.drawImage(image, 0, 0 /*,1200,canvas.height */); //will need a fitrect
                 var pngdata = canvas.toDataURL('image/png');
                 $('.preview').html('<img src="' + pngdata + '" />');
                 $('.pngdata').html(pngdata);
