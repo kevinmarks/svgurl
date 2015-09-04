@@ -48,7 +48,7 @@ class MainHandler(webapp2.RequestHandler):
     upload_url = blobstore.create_upload_url('/upload')
     template = JINJA_ENVIRONMENT.get_template('homepage.html')
     qry = SvgPage.query().order(-SvgPage.published)
-    recentpix=qry.fetch(20)
+    recentpix=qry.fetch(50)
     pix = [ {"name":"%s" % page.name, "svgid":newbase60.numtosxg(page.svgid),"published":page.published} for page in recentpix]
     self.response.write(template.render({'upload_url':upload_url, 'pix':pix}))
 
@@ -106,10 +106,11 @@ class PngToSvgHandler(webapp2.RequestHandler):
         url = "https://savageping.herokuapp.com/u?" + urllib.urlencode({"url":svgurl,"width":1024})
         urlfetch.set_default_fetch_deadline(180)
         result = urlfetch.fetch(url)
+        rawpng=None
         if result.status_code == 200:
           rawpng= result.content
         else:
-            status="error from service" +result.status_code
+            status="error from service: %s" %(result.status_code)
         if (rawpng):
             logging.info(" png %s" % rawpng[0:256])
             bucket_name = os.environ.get('BUCKET_NAME',
@@ -141,7 +142,13 @@ class PngHandler(webapp2.RequestHandler):
     if pages[0].pngBlob:
         self.redirect(images.get_serving_url(pages[0].pngBlob)+"=s"+width+"-c")
     elif pages[0].pngFile:
-        self.redirect(images.get_serving_url(pages[0].pngFile))
+        try:
+            self.redirect(images.get_serving_url(pages[0].pngFile))
+        except:
+            pages[0].pngFile = None
+            pages[0].put()
+            taskqueue.add(url='/makepingfromsvg/%s' % key)
+            self.redirect('/s/'+filename)
     else:
         self.redirect('/s/'+filename)
 
@@ -187,7 +194,9 @@ class RawServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
 
 class SvgHandler(webapp2.RequestHandler):
   def get(self, filename):
-    resource = int(newbase60.sxgtonum(urllib.unquote(filename)))
+    bits= filename.split('.')
+    key = bits[0]
+    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
     svgStr = newbase60.numtosxg(resource)
