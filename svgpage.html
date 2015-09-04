@@ -9,10 +9,16 @@
 <script src="http://code.jquery.com/jquery-latest.js"></script>
 <script src="/static/saveSvgAsPng.js"></script>
 <meta property="og:url"                content="{{image_link}}" />
-<meta property="og:type"               content="article" />
+<meta property="og:type"               content="website" />
 <meta property="og:title"              content="{{name}}" />
 <meta property="og:description"        content="{{summary}}" />
 <meta property="og:image"              content="{{png_link}}" />
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@svgur_com">
+<meta name="twitter:creator" content="@kevinmarks">
+<meta name="twitter:title" content="{{name}}">
+<meta name="twitter:text:description" content="{{summary or name}}">
+<meta name="twitter:image" content="{{png_link}}">
 </head>  
   <body >
   <nav><h1>svgur</h1> <a href="/">Add SVG</a></nav>
@@ -42,6 +48,7 @@
   <input readonly value="&lt;iframe src='{{iframe_link}}' width=100% height=100% &gt;&lt;/iframe&gt;" type="text" >
   </ul>
 </section>
+<footer>made so you can easily upload, embed and share SVG vector files by <a href="http://kevinmarks.com">Kevin Marks</a>
 <script id="webmention-hosted">
   (function () {
     var sn = document.createElement("script"), s = document.getElementsByTagName("script")[0], url;
