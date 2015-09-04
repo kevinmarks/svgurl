@@ -15,7 +15,6 @@
     <div class=load-target ></div>
     <div class="hidfirst"><textarea name="summary" placeholder="describe the image"></textarea></div>
     <div class="hidfirst"><input type="submit"  name="submit" value="Share"></div>
-    <textarea class="pngdata" name="pngfield" placeholder="png goes here">png?</textarea>
   </form>  
     <div class="preview"></div>
     <h2 class="hidafter">Recent Images</h2>
@@ -49,20 +48,6 @@
           svgAsDataUri($el.find('.load-target svg')[0], null, function(uri) {
             $('.hidafter').hide();
             $el.find('.hidfirst').show();
-            var image = new Image();
-            image.src = uri;
-            image.onload = function() {
-                var canvas = document.createElement('canvas');
-                // use current magic sizes for facebook twitter ie 1200, but preserve ratio
-                canvas.width = image.width; //1200; //image.width;
-                canvas.height = image.height;//1200*image.height/image.width; //image.height;
-                var context = canvas.getContext('2d');
-                // 
-                context.drawImage(image, 0, 0 /*,1200,canvas.height */); //will need a fitrect
-                var pngdata = canvas.toDataURL('image/png');
-                $('.preview').html('<img src="' + pngdata + '" />');
-                $('.pngdata').html(pngdata);
-                }
           });
         }
       })(f);
