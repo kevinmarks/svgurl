@@ -150,6 +150,7 @@ class PngHandler(webapp2.RequestHandler):
             taskqueue.add(url='/makepingfromsvg/%s' % key)
             self.redirect('/s/'+filename)
     else:
+        taskqueue.add(url='/makepingfromsvg/%s' % key)
         self.redirect('/s/'+filename)
 
 class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
