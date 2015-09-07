@@ -4,13 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-.picframe {position:fixed; margin:0; top:0px; bottom:0px; left:0px; right:0px; overflow: hidden;}
-.picframe svg {width:100%; height:100%; object-fit:contain; border:0; }
+body {font-family:sans-serif;}
+.picframe {position:fixed; margin:0; top:0px; bottom:0px; left:5vw; right:5vw; overflow: hidden;}
+svg {width:100%; height:100%; object-fit:contain; border:0; }
+.titleframe {position:fixed; margin:0; top:0px; left: 0px; width:5vw; height:100vh;  font-size:2vw;  overflow: hidden;}
+.linkframe {position:fixed; margin:0; top:0px; left: 95vw; width:5vw; height:100vh; font-size:4vw;}
 </style>
 </head>  
   <body>
 {% autoescape false %}
+<div class="titleframe">
+ <svg class="title" width="50" height="512" viewbox="0 0 50 512">
+    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" transform="rotate(-90,25,256)">
+       {{name}}
+   </text>
+ </svg>
+</div>
 <div class="picframe">{{svg}}</div>
 {% endautoescape %}
+<div class="linkframe">
+ <svg class="link" width="50" height="512" viewbox="0 0 50 512">
+    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" transform="rotate(-90,25,256)">
+       {{image_link}}
+   </text>
+ </svg>
+</div>
   </body>
 </html>

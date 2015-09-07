@@ -182,7 +182,8 @@ class FrameHandler(blobstore_handlers.BlobstoreDownloadHandler):
     reader = blobstore.BlobReader(blob_info)
     rawsvg = reader.read().decode('utf-8')
     svgVals = { 'name':pages[0].name,
-                'svg': rawsvg
+                'svg': rawsvg,
+                'image_link':siteName+'/s/'+svgStr,
                 }
     self.response.write(template.render(svgVals))    
 
