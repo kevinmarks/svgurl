@@ -100,7 +100,7 @@ class PngToSvgHandler(webapp2.RequestHandler):
         status="file exists"
     else:
         urlbits= list(urlparse.urlsplit(self.request.uri))
-        urlbits[2] = '/i/'+key+'.svg'
+        urlbits[2] = '/f/'+key
         urlbits[3] = ''
         svgurl= urlparse.urlunsplit(urlbits)
         url = "https://savageping.herokuapp.com/u?" + urllib.urlencode({"url":svgurl,"width":1024})
