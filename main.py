@@ -94,9 +94,14 @@ class PngToSvgHandler(webapp2.RequestHandler):
     resource = int(newbase60.sxgtonum(urllib.unquote(key)))
     qry = SvgPage.query(SvgPage.svgid == resource)
     width = str(self.request.get('width', "0"))
+    force = self.request.get('force')
     pages = qry.fetch(1)
-    page = pages[0]
-    if  page.pngFile:
+    page=None
+    if len(pages)>0:
+        page = pages[0]
+    if not page:
+        status="no such svg"
+    elif not force and page.pngFile:
         status="file exists"
     else:
         urlbits= list(urlparse.urlsplit(self.request.uri))
@@ -125,7 +130,7 @@ class PngToSvgHandler(webapp2.RequestHandler):
             status="file created"
             page.put()
     logging.info("PngToSvgHandler "+ key +" status: " + status)
-    self.response.write(status) 
+    self.response.write("svg to png "+ key +" status: " + status) 
 
     
 class PngHandler(webapp2.RequestHandler):
@@ -140,10 +145,10 @@ class PngHandler(webapp2.RequestHandler):
     width = str(self.request.get('width', "0"))
     pages = qry.fetch(1)
     if pages[0].pngBlob:
-        self.redirect(images.get_serving_url(pages[0].pngBlob)+"=s"+width+"-c")
+        self.redirect(images.get_serving_url(pages[0].pngBlob)+"=s"+width)
     elif pages[0].pngFile:
         try:
-            self.redirect(images.get_serving_url(pages[0].pngFile))
+            self.redirect(images.get_serving_url(pages[0].pngFile)+"=s"+width)
         except:
             pages[0].pngFile = None
             pages[0].put()
@@ -184,6 +189,7 @@ class FrameHandler(blobstore_handlers.BlobstoreDownloadHandler):
     svgVals = { 'name':pages[0].name,
                 'svg': rawsvg,
                 'image_link':siteName+'/s/'+svgStr,
+                'url':'/i/'+ svgStr+'.svg',
                 }
     self.response.write(template.render(svgVals))    
 
