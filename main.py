@@ -61,29 +61,11 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     page.summary = self.request.get('summary',"")
     page.svgBlob=blob_info.key()
     page.svgid = svgcounter.one()
-    pngAsData = None #self.request.get('pngfield',"")
-    if (pngAsData):
-        logging.info("got pngAsData length %i" %len(pngAsData))
-        rawpng = base64.decodestring(pngAsData.split("data:image/png;base64,")[1])
-        logging.info("decoded png length %i" %len(rawpng))
-        logging.info("raw data png %s" % pngAsData[0:256])
-        logging.info("decoded png %s" % rawpng[0:256])
-        if rawpng:
-            bucket_name = os.environ.get('BUCKET_NAME',
-                                         app_identity.get_default_gcs_bucket_name())
-            filename = '/' + bucket_name + '/p/%s.png' % newbase60.numtosxg(page.svgid)
-            gcs_file = gcs.open(filename, 'w', content_type='image/png')
-            gcs_file.write(rawpng)
-            gcs_file.close()
-            # Get the file's blob key
-            #page.pngBlob = blobstore.create_gs_key("/gs"+ filename)
-            page.pngFile =  blobstore.create_gs_key("/gs"+ filename)
-            logging.info("png file %s" % page.pngFile)
     page.put()
     self.redirect('/s/%s' % newbase60.numtosxg(page.svgid))
     taskqueue.add(url='/makepingfromsvg/%s' % newbase60.numtosxg(page.svgid))
     
-class PngToSvgHandler(webapp2.RequestHandler):
+class PngFromSvgHandler(webapp2.RequestHandler):
   def post(self, filename):
     status="pending"
     bits= filename.split('.')
@@ -129,7 +111,7 @@ class PngToSvgHandler(webapp2.RequestHandler):
             page.pngFile =  blobstore.create_gs_key("/gs"+ filename)
             status="file created"
             page.put()
-    logging.info("PngToSvgHandler "+ key +" status: " + status)
+    logging.info("PngFromSvgHandler "+ key +" status: " + status)
     self.response.write("svg to png "+ key +" status: " + status) 
 
     
@@ -227,6 +209,6 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/i/([^/]+)?', ServeHandler),
                                ('/f/([^/]+)?', FrameHandler),
                                ('/p/([^/]+)?', PngHandler),
-                               ('/makepingfromsvg/([^/]+)?', PngToSvgHandler),
+                               ('/makepingfromsvg/([^/]+)?', PngFromSvgHandler),
                                ('/raw/([^/]+)?', RawServeHandler)],
                               debug=True)
