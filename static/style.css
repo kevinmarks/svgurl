@@ -6,7 +6,8 @@ nav {font-size: 1.5em;}
 h1 { font-size: 3em; margin:0;}
 .h-cite { background-color: linen;}
 form {border: 1px solid gray; background-color: aliceblue;}
-.picframe img {border: 1px solid lightgray; background-color: aliceblue; object-fit:contain;}
+.picframe img {border: 1px solid lightgray; background-color: white; object-fit:contain;}
+.wide img {width:98vw;}
 .picgrid { margin:.5em; height:10em; width:10em; float:left; display:table-cell;vertical-align:middle; text-align:center; }
 .picgrid img {width:100%; height:100%;  object-fit:contain; }
 .shadegrid { margin:.5em; height:2em; width:2em; float:left; display:table-cell;vertical-align:middle; text-align:center; }
@@ -20,7 +21,7 @@ hr {clear:left;}
 #shares input {font-size:1.5em; width:80%; background-color: white;}
 footer {clear:left;}
 .pngdata {display:none}
-
+img,video {max-width: 98vw;} 
 .webmention-author img {height: 3em; float:left; margin:.25em;}
 .webmention-mention { margin:.5em; background-color: linen;}
 .webmention-facepile > li {

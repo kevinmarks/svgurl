@@ -8,7 +8,7 @@
 <link href="/static/style.css" media="all" rel="stylesheet" type="text/css" />
 </head>  
 <body >
-  <nav><h1>svgur</h1> Upload, embed and share SVG vector files</nav>
+  <nav class="h-card"><h1 class="p-name">svgur</h1> <span="p-summary">Upload, embed and share SVG vector files</span></nav>
   <form id=filereader action="{{upload_url}}" method="POST" enctype="multipart/form-data">
     <input class="choosesvg hidafter" id=file type="file" accept=".svg, image/svg+xml" name="file" value="Choose SVG">
     <div class="hidfirst "><input type="text" name="name" placeholder="Name it"></div>
@@ -17,10 +17,10 @@
     <div class="hidfirst"><input type="submit"  name="submit" value="Share"></div>
   </form>  
     <div class="preview"></div>
-    <h2 class="hidafter">Recent Images</h2>
   <div id="recent" class="hidafter h-feed">
+    <h2 class="hidafter p-name">Recent Images</h2>
   {% for pic in pix %}
-  <div class="picframe picgrid h-entry"><span class="e-content"><a class="u-url" title="{{pic.name}}" href="/s/{{pic.svgid}}" ><img class="pixpreview u-photo p-name" alt="{{pic.name}}" src="/i/{{pic.svgid}}.svg"  /></a><time class="dt-published" datetime="{{pic.published}}"></time></span></div>
+  <div class="picframe picgrid h-entry"><span class="e-content"><a class="u-url" title="{{pic.name}}" href="/s/{{pic.svgid}}" ><img class="pixpreview u-photo u-featured p-name" alt="{{pic.name}}" src="/i/{{pic.svgid}}.svg"  /></a><time class="dt-published" datetime="{{pic.published}}"></time></span></div>
   {% endfor %}
   </div>
 <footer>made so you can easily upload, embed and share SVG vector files by <a href="http://kevinmarks.com">Kevin Marks</a>
