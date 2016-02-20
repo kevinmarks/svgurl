@@ -152,6 +152,8 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
     pages = qry.fetch(1)
     blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
     self.send_blob(blob_info)
+  def head(self, filename):
+    self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
     
 class FrameHandler(blobstore_handlers.BlobstoreDownloadHandler):
   def get(self, filename):
@@ -201,7 +203,11 @@ class SvgHandler(webapp2.RequestHandler):
                 'direct_link':siteName+'/i/'+ svgStr+'.svg',
                 'png_link':siteName+'/p/'+ svgStr+'.png'
                 }
+    self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
     self.response.write(template.render(svgVals))    
+  def head(self, filename):
+    self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
+    
 
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/s/([^/]+)?', SvgHandler),
