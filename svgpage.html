@@ -62,6 +62,8 @@
     sn.type = "text/javascript"; sn.async = true;
     sn.src = "//webmention.herokuapp.com/api/embed?version=cutting-edge&url=" + encodeURIComponent(url || window.location);
     s.parentNode.insertBefore(sn, s);
+    sn.src = "//webmention.herokuapp.com/api/embed?version=cutting-edge&url=" + encodeURIComponent({{direct_link}});
+    s.parentNode.insertBefore(sn, s);
   }());
 </script>
   </body>
