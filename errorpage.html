@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+<head><title>{{error}} -svgur.com </title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="webmention" href="https://webmention.herokuapp.com/api/webmention" />
+<link href="/static/style.css" media="all" rel="stylesheet" type="text/css" />
+<script src="/static/indieconfig.js"></script>
+<script src="/static/webaction.js"></script>
+</head>  
+  <body >
+  <nav><h1>svgur</h1> <a href="/">Go home</a></nav>
+  <h2>{{error}}</h2>
+<footer>made so you can easily upload, embed and share SVG vector files by <a href="http://kevinmarks.com">Kevin Marks</a>
+  </body>
+</html>
+{% endautoescape %}

@@ -192,19 +192,25 @@ class SvgHandler(webapp2.RequestHandler):
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
     svgStr = newbase60.numtosxg(resource)
-    template = JINJA_ENVIRONMENT.get_template('svgpage.html')
-    svgVals = { 'name':pages[0].name,
-                'summary':pages[0].summary,
-                'published':pages[0].published,
-                'url':'/i/'+ svgStr+'.svg',
-                'rawurl':'/raw/'+ str(pages[0].svgBlob),
-                'image_link':siteName+'/s/'+svgStr,
-                'iframe_link':siteName+'/f/'+ svgStr,
-                'direct_link':siteName+'/i/'+ svgStr+'.svg',
-                'png_link':siteName+'/p/'+ svgStr+'.png'
-                }
-    self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
-    self.response.write(template.render(svgVals))    
+    if pages:
+        template = JINJA_ENVIRONMENT.get_template('svgpage.html')
+        svgVals = { 'name':pages[0].name,
+                    'summary':pages[0].summary,
+                    'published':pages[0].published,
+                    'url':'/i/'+ svgStr+'.svg',
+                    'rawurl':'/raw/'+ str(pages[0].svgBlob),
+                    'image_link':siteName+'/s/'+svgStr,
+                    'iframe_link':siteName+'/f/'+ svgStr,
+                    'direct_link':siteName+'/i/'+ svgStr+'.svg',
+                    'png_link':siteName+'/p/'+ svgStr+'.png'
+                    }
+        self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"'
+    else:
+        template = JINJA_ENVIRONMENT.get_template('errorpage.html')
+        svgVals = { 'error':"No such image as %s" % filename }
+        self.response.set_status(404)
+    self.response.write(template.render(svgVals))
+
   def head(self, filename):
     self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
     
