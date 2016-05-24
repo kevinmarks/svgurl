@@ -122,6 +122,7 @@ class PngHandler(webapp2.RequestHandler):
     extension = '.png'
     if len(bits)>1:
         extension = bits[1] #awaiting conditional code for png/jpg
+    self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
     resource = int(newbase60.sxgtonum(urllib.unquote(key)))
     qry = SvgPage.query(SvgPage.svgid == resource)
     width = str(self.request.get('width', "0"))
@@ -139,6 +140,8 @@ class PngHandler(webapp2.RequestHandler):
     else:
         taskqueue.add(url='/makepingfromsvg/%s' % key)
         self.redirect('/s/'+filename)
+  def head(self, filename):
+    self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
 
 class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
   def get(self, filename):
