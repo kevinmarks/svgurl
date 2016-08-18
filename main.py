@@ -13,6 +13,8 @@ from google.appengine.api import files
 from google.appengine.api import app_identity
 from google.appengine.api import urlfetch
 from google.appengine.api import taskqueue
+import hashlib
+import json
 
 import logging
 import cloudstorage as gcs
@@ -42,6 +44,21 @@ class SvgPage(ndb.Model):
     published = ndb.DateTimeProperty(auto_now_add=True)
     name = ndb.StringProperty(indexed=True)
     summary = ndb.StringProperty(indexed=False)
+    svghash = ndb.StringProperty(indexed=True) # sha1 hash of svg
+    def getHash(self, hashtype='sha1'):
+        """Make a SubResource Integrity compatible hash, but using sha1 by default as they exist."""
+        if not self.svghash:
+            blob_reader = blobstore.BlobReader(self.svgBlob)
+            digest = hashlib.sha1(blob_reader.read()).digest()
+            self.svghash = "sha1-%s" % (base64.b64encode(digest))
+        return self.svghash
+    def getLink(self, kind="image",absolute=True):
+        svgStr = newbase60.numtosxg(self.svgid)
+        pattern = {'iframe':'/f/%s', 'direct':'/i/%s.svg', 'png':'/i/%s.svg'}.get(kind,'/s/%s')
+        link = pattern % (svgStr)
+        if absolute:
+            link = siteName+link
+        return link
     
 class MainHandler(webapp2.RequestHandler):
   def get(self):
@@ -61,6 +78,8 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     page.summary = self.request.get('summary',"")
     page.svgBlob=blob_info.key()
     page.svgid = svgcounter.one()
+    hash = page.getHash()
+    logging.info(" id %s hash '%s'" % (page.svgid,hash))
     page.put()
     self.redirect('/s/%s' % newbase60.numtosxg(page.svgid))
     taskqueue.add(url='/makepingfromsvg/%s' % newbase60.numtosxg(page.svgid))
@@ -150,6 +169,7 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
     extension = '.svg'
     if len(bits)>1:
         extension = bits[1] #awaiting conditional code for png/jpg
+    self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
     resource = int(newbase60.sxgtonum(urllib.unquote(key)))
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
@@ -213,6 +233,50 @@ class SvgHandler(webapp2.RequestHandler):
         svgVals = { 'error':"No such image as %s" % filename }
         self.response.set_status(404)
     self.response.write(template.render(svgVals))
+    
+class UrlToHashHandler(webapp2.RequestHandler):
+  def get(self, filename):
+    bits= filename.split('.')
+    key = bits[0]
+    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    qry = SvgPage.query(SvgPage.svgid == resource)
+    pages = qry.fetch(1)
+    if pages:
+        output = [{'url':pages[0].getLink('direct'),'hash':pages[0].getHash(), 'date':pages[0].published.isoformat()}]
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(output))
+    else:
+        template = JINJA_ENVIRONMENT.get_template('errorpage.html')
+        svgVals = { 'error':"No such image as %s" % filename }
+        self.response.set_status(404)
+        self.response.write(template.render(svgVals))
+        
+class HashToUrlHandler(webapp2.RequestHandler):
+  def get(self, hash):
+    qry = SvgPage.query(SvgPage.svghash == hash)
+    pages = qry.fetch(1)
+    if pages:
+        output = [{'url':pages[0].getLink('direct'),'hash':pages[0].getHash(), 'date':pages[0].published.isoformat()}]
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(output))
+    else:
+        template = JINJA_ENVIRONMENT.get_template('errorpage.html')
+        svgVals = { 'error':"No such image hash as %s" % hash }
+        self.response.set_status(404)
+        self.response.write(template.render(svgVals))
+
+class GetbyHashHandler(webapp2.RequestHandler):
+  def get(self, hash):
+    qry = SvgPage.query(SvgPage.svghash == hash)
+    pages = qry.fetch(1)
+    if pages:
+        self.redirect(pages[0].getLink('direct'))
+    else:
+        template = JINJA_ENVIRONMENT.get_template('errorpage.html')
+        svgVals = { 'error':"No such image hash as %s" % hash }
+        self.response.set_status(404)
+        self.response.write(template.render(svgVals))
+
 
   def head(self, filename):
     self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
@@ -225,5 +289,9 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/f/([^/]+)?', FrameHandler),
                                ('/p/([^/]+)?', PngHandler),
                                ('/makepingfromsvg/([^/]+)?', PngFromSvgHandler),
-                               ('/raw/([^/]+)?', RawServeHandler)],
+                               ('/raw/([^/]+)?', RawServeHandler),
+                               ('/urltohash/([^/]+)?', UrlToHashHandler),
+                               ('/hashtourl/([^/]+)?', HashToUrlHandler),
+                               ('/getbyhash/([^/]+)?', GetbyHashHandler),
+                               ],
                               debug=True)
