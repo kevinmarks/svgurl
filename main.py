@@ -51,6 +51,7 @@ class SvgPage(ndb.Model):
             blob_reader = blobstore.BlobReader(self.svgBlob)
             digest = hashlib.sha1(blob_reader.read()).digest()
             self.svghash = "sha1-%s" % (base64.b64encode(digest))
+            self.put() # write back hash
         return self.svghash
     def getLink(self, kind="image",absolute=True):
         svgStr = newbase60.numtosxg(self.svgid)
@@ -278,6 +279,7 @@ class UrlToHashHandler(webapp2.RequestHandler):
         
 class HashToUrlHandler(webapp2.RequestHandler):
   def get(self, hash):
+    logging.info("HashToUrlHandler hash: '%s'" %(hash))
     qry = SvgPage.query(SvgPage.svghash == hash)
     pages = qry.fetch(1)
     if pages:
@@ -317,7 +319,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/raw/([^/]+)?', RawServeHandler),
                                ('/idtohash/([^/]+)?', IdToHashHandler),
                                ('/urltohash', UrlToHashHandler),
-                               ('/hashtourl/([^/]+)?', HashToUrlHandler),
-                               ('/getbyhash/([^/]+)?', GetbyHashHandler),
+                               ('/hashtourl/(.+)', HashToUrlHandler),
+                               ('/getbyhash/(.+)?', GetbyHashHandler),
                                ],
                               debug=True)
