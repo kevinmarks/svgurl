@@ -234,11 +234,12 @@ class SvgHandler(webapp2.RequestHandler):
         self.response.set_status(404)
     self.response.write(template.render(svgVals))
     
-class UrlToHashHandler(webapp2.RequestHandler):
+class IdToHashHandler(webapp2.RequestHandler):
   def get(self, filename):
     bits= filename.split('.')
     key = bits[0]
     resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    logging.info("UrlToHashHandler file: '%s' key:'%s' resource:'%s'" %(filename,key,resource))
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
     if pages:
@@ -250,6 +251,30 @@ class UrlToHashHandler(webapp2.RequestHandler):
         svgVals = { 'error':"No such image as %s" % filename }
         self.response.set_status(404)
         self.response.write(template.render(svgVals))
+
+class UrlToHashHandler(webapp2.RequestHandler):
+  def get(self):
+    url=self.request.get('url',"")
+    if url:
+        if "://" not in url:
+            url = "http://"+url
+    filename = urlparse.urlsplit(url).path.split('/')[-1]
+    bits= filename.split('.')
+    key = bits[0]
+    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    logging.info("UrlToHashHandler url: '%s', file: '%s' key:'%s' resource:'%s'" %(url,filename,key,resource))
+    qry = SvgPage.query(SvgPage.svgid == resource)
+    pages = qry.fetch(1)
+    if pages:
+        output = [{'url':pages[0].getLink('direct'),'hash':pages[0].getHash(), 'date':pages[0].published.isoformat()}]
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(output))
+    else:
+        template = JINJA_ENVIRONMENT.get_template('errorpage.html')
+        svgVals = { 'error':"No url here like '%s'" % url }
+        self.response.set_status(404)
+        self.response.write(template.render(svgVals))
+
         
 class HashToUrlHandler(webapp2.RequestHandler):
   def get(self, hash):
@@ -290,7 +315,8 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/p/([^/]+)?', PngHandler),
                                ('/makepingfromsvg/([^/]+)?', PngFromSvgHandler),
                                ('/raw/([^/]+)?', RawServeHandler),
-                               ('/urltohash/([^/]+)?', UrlToHashHandler),
+                               ('/idtohash/([^/]+)?', IdToHashHandler),
+                               ('/urltohash', UrlToHashHandler),
                                ('/hashtourl/([^/]+)?', HashToUrlHandler),
                                ('/getbyhash/([^/]+)?', GetbyHashHandler),
                                ],
