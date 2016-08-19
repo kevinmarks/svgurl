@@ -19,9 +19,12 @@ import json
 import logging
 import cloudstorage as gcs
 import urlparse
+import openanything
+from google.appengine.api import urlfetch
+
 
 siteName = "http://svgur.com"
-
+#siteName = "http://localhost:10080"
 svgcounter = increment.Increment("svg-id", 10)
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -312,13 +315,23 @@ class ProxyHandler(webapp2.RequestHandler):
         if "://" not in url:
             url = "http://"+url
     logging.info("ProxyHandler url: '%s' " %(url))
-    qry = SvgPage.query(SvgPage.svghash == hash)
-    pages = qry.fetch(1)
-    if pages:
-        self.redirect(pages[0].getLink('direct'))
+    uthparams = openanything.fetch(siteName+'/urltohash?url=%s' %(urllib.quote(url)))
+    logging.info("ProxyHandler urltohash: '%s' status: '%s' " %(uthparams.get('data','uh oh'),uthparams.get('status','?')))
+    hashinfo = json.loads(uthparams.get('data','[]'))
+    finalurl=''
+    if hashinfo:
+        thehash = hashinfo[0].get('hash','')
+        if thehash:
+            h2uparams = openanything.fetch(siteName+'/hashtourl/%s' %(thehash))
+            logging.info("ProxyHandler hashtourl: '%s' status: '%s' " %(h2uparams.get('data','uh oh'),h2uparams.get('status','?')))
+            urlinfo = json.loads(h2uparams.get('data','[]'))
+            if urlinfo:
+                finalurl = urlinfo[0].get('url','').encode('utf8')
+    if finalurl:
+        self.redirect(finalurl)
     else:
         template = JINJA_ENVIRONMENT.get_template('errorpage.html')
-        svgVals = { 'error':"No such file as %s" % hash }
+        svgVals = { 'error':"Proxy can't find a hash for %s" % url }
         self.response.set_status(404)
         self.response.write(template.render(svgVals))
 
