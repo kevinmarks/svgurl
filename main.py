@@ -58,8 +58,11 @@ class SvgPage(ndb.Model):
         return self.svghash
     def getLink(self, kind="image",absolute=True):
         svgStr = newbase60.numtosxg(self.svgid)
-        pattern = {'iframe':'/f/%s', 'direct':'/i/%s.svg', 'png':'/i/%s.svg'}.get(kind,'/s/%s')
-        link = pattern % (svgStr)
+        if kind=='hash':
+            link ="/getbyhash/%s" % (self.getHash())
+        else:
+            pattern = {'iframe':'/f/%s', 'direct':'/i/%s.svg', 'png':'/i/%s.svg'}.get(kind,'/s/%s')
+            link = pattern % (svgStr)
         if absolute:
             link = siteName+link
         return link
@@ -226,11 +229,9 @@ class SvgHandler(webapp2.RequestHandler):
                     'published':pages[0].published,
                     'url':'/i/'+ svgStr+'.svg',
                     'rawurl':'/raw/'+ str(pages[0].svgBlob),
-                    'image_link':siteName+'/s/'+svgStr,
-                    'iframe_link':siteName+'/f/'+ svgStr,
-                    'direct_link':siteName+'/i/'+ svgStr+'.svg',
-                    'png_link':siteName+'/p/'+ svgStr+'.png'
                     }
+        for kind in ('image','iframe','direct','png','hash'):
+            svgVals[kind+"_link"] = pages[0].getLink(kind)
         self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"'
     else:
         template = JINJA_ENVIRONMENT.get_template('errorpage.html')
