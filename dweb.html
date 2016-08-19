@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+<head><title>DWTF </title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="webmention" href="https://webmention.herokuapp.com/api/webmention" />
+<link href="/static/style.css" media="all" rel="stylesheet" type="text/css" />
+<script src="/static/indieconfig.js"></script>
+<script src="/static/webaction.js"></script>
+</head>  
+  <body >
+  <nav><h1>DWTF</h1> <h2>Decentralized Web Task Force</h2>
+  <div class="h-entry">
+    <form action="/dweb" method="get">
+      <div>url:<input name="url" type="url" value="{{url}}"></input></div>
+    </form>
+  <h3>Direct</h3>
+  <div class="picframe" id="direct"><img id="svg" class="u-photo" src="{{url}}" /></div>
+  <h3>via hash</h3>
+  <div class="picframe" id="proxy"><img id="svg" class="u-photo" src="{{proxyurl}}" /></div>
+  <h3>urltohash</h3>
+   <div class="picframe" id="urltohash"><iframe src={{urltohash}}" /></iframe></div>
+ 
+<hr>
+<section class="info">
+  <p class="p-summary">{{summary}}
+  <p class="p-hash">{{hash}}
+  <p><time class="dt-published" datetime="{{published}}">Published: {{published}}</time> 
+  </div>
+</section>
+<footer>made to demonstrate content addressing by <a href="http://kevinmarks.com">Kevin Marks</a>
+<p><indie-action do="reply" with="{{image_link}}">
+<a class="action reply" target="_blank" href="https://twitter.com/intent/tweet?url={{image_link}}"><img src="/static/twitterlogo.svg" alt="" height=16> Tweet a comment</a>
+</indie-action>
+<script id="webmention-hosted">
+  (function () {
+    var sn = document.createElement("script"), s = document.getElementsByTagName("script")[0], url;
+    url = document.querySelectorAll ? document.querySelectorAll("link[rel~=canonical]") : false;
+    url = url && url[0] ? url[0].href : false;
+    sn.type = "text/javascript"; sn.async = true;
+    sn.src = "//webmention.herokuapp.com/api/embed?version=cutting-edge&url=" + encodeURIComponent(url || window.location)
+             + "&url=" + encodeURIComponent("{{png_link}}") + "&url=" + encodeURIComponent("{{direct_link}}");
+    s.parentNode.insertBefore(sn, s);
+  }());
+</script>
+  </body>
+</html>
+{% endautoescape %}

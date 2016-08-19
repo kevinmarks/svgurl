@@ -281,9 +281,10 @@ class HashToUrlHandler(webapp2.RequestHandler):
   def get(self, hash):
     logging.info("HashToUrlHandler hash: '%s'" %(hash))
     qry = SvgPage.query(SvgPage.svghash == hash)
-    pages = qry.fetch(1)
+    pages = qry.fetch(10)
+    output= []
     if pages:
-        output = [{'url':pages[0].getLink('direct'),'hash':pages[0].getHash(), 'date':pages[0].published.isoformat()}]
+        output = [{'url':page.getLink('direct'),'hash':page.getHash(), 'date':page.published.isoformat()} for page in pages]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.write(json.dumps(output))
     else:
@@ -304,6 +305,33 @@ class GetbyHashHandler(webapp2.RequestHandler):
         self.response.set_status(404)
         self.response.write(template.render(svgVals))
 
+class ProxyHandler(webapp2.RequestHandler):
+  def get(self):
+    url=self.request.get('url',"")
+    if url:
+        if "://" not in url:
+            url = "http://"+url
+    logging.info("ProxyHandler url: '%s' " %(url))
+    qry = SvgPage.query(SvgPage.svghash == hash)
+    pages = qry.fetch(1)
+    if pages:
+        self.redirect(pages[0].getLink('direct'))
+    else:
+        template = JINJA_ENVIRONMENT.get_template('errorpage.html')
+        svgVals = { 'error':"No such file as %s" % hash }
+        self.response.set_status(404)
+        self.response.write(template.render(svgVals))
+
+class DwebHandler(webapp2.RequestHandler):
+  def get(self):
+    url=self.request.get('url',"")
+    if url:
+        if "://" not in url:
+            url = "http://"+url
+    template = JINJA_ENVIRONMENT.get_template('dweb.html')
+    vals = { 'url':url, 'proxyurl':'/proxy?url=%s' %(urllib.quote(url)),
+            'urltohash':'/urltohash?url=%s' %(urllib.quote(url)), }
+    self.response.write(template.render(vals))
 
   def head(self, filename):
     self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
@@ -321,5 +349,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/urltohash', UrlToHashHandler),
                                ('/hashtourl/(.+)', HashToUrlHandler),
                                ('/getbyhash/(.+)?', GetbyHashHandler),
+                               ('/proxy', ProxyHandler),
+                               ('/dweb', DwebHandler),
                                ],
                               debug=True)
