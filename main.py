@@ -23,8 +23,10 @@ import openanything
 from google.appengine.api import urlfetch
 
 
-siteName = "http://svgur.com"
-#siteName = "http://localhost:10080"
+if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
+    siteName = "http://svgur.com"
+else:
+    siteName = "http://localhost:10080"
 svgcounter = increment.Increment("svg-id", 10)
 
 JINJA_ENVIRONMENT = jinja2.Environment(
