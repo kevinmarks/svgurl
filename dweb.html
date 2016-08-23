@@ -8,27 +8,39 @@
 <link href="/static/style.css" media="all" rel="stylesheet" type="text/css" />
 <script src="/static/indieconfig.js"></script>
 <script src="/static/webaction.js"></script>
+<style>
+.picframe img {height:240px;}
+.picframe iframe {width:95%; height:3em;}
+.siteframe iframe {width:95%; height:15em;}
+.url-input input {width:90%;}
+</style>
 </head>  
   <body >
   <nav><h1>DWTF</h1> <h2>Decentralized Web Task Force</h2>
-  <div class="h-entry">
-    <form action="/dweb" method="get">
-      <div>url:<input name="url" type="url" value="{{url}}"></input></div>
-    </form>
+  <p>This is a demonstration of content addressing, currently using just files on this site. Put in a url to an svg image here
+  <form action="/dweb" method="get">
+    <div class="url-input">url:<input name="url" type="url" value="{{url}}"></input></div>
+  </form>
   <h3>Direct</h3>
+  <p> this is loaded direct from the site by URL.
   <div class="picframe" id="direct"><img id="svg" class="u-photo" src="{{url}}" /></div>
+  <h3>url to hash</h3>
+  <p>This is looking up with the <a href="{{urltohash}}">urltohash endpoint</a>, showing that we do have a hash for this url
+   <div class="picframe" id="urltohash"><iframe src="{{urltohash}}" /></iframe></div>
+  <h3>hash to url</h3>
+  <p>This is looking up from the hash with the <a href="{{hashtourl}}">hashtourl endpoint</a> to find a url
+   <div class="picframe" id="hashtourl"><iframe src="{{hashtourl}}" /></iframe></div>
   <h3>via hash</h3>
+  <p>This is a <a href="{{proxyurl}}">proxy</a> that looks up by URL then by hash:
   <div class="picframe" id="proxy"><img id="svg" class="u-photo" src="{{proxyurl}}" /></div>
-  <h3>urltohash</h3>
-   <div class="picframe" id="urltohash"><iframe src={{urltohash}}" /></iframe></div>
- 
+  <h3>other hash resolvers</h3>
+  <p>this looks up the same hash at <a href="{{hasharchive}}">hash archive</a>, showing other locations for the same file:
+   <div class="siteframe" id="hashtourl"><iframe src="{{hasharchive}}" /></iframe></div>
+
+<p>The goal is to make a proxy that can use the Internet Archive's wayback store as a hash <-> url translator,
+and to be able to look up hashes in other content repositories.
+<p>A client-side app that uses progressive web app techniques to intercept url fetches can then become independent of URL resolution, once it has hashes to resolve.
 <hr>
-<section class="info">
-  <p class="p-summary">{{summary}}
-  <p class="p-hash">{{hash}}
-  <p><time class="dt-published" datetime="{{published}}">Published: {{published}}</time> 
-  </div>
-</section>
 <footer>made to demonstrate content addressing by <a href="http://kevinmarks.com">Kevin Marks</a>
 <p><indie-action do="reply" with="{{image_link}}">
 <a class="action reply" target="_blank" href="https://twitter.com/intent/tweet?url={{image_link}}"><img src="/static/twitterlogo.svg" alt="" height=16> Tweet a comment</a>

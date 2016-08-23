@@ -341,12 +341,23 @@ class ProxyHandler(webapp2.RequestHandler):
 class DwebHandler(webapp2.RequestHandler):
   def get(self):
     url=self.request.get('url',"")
+    if not url:
+        url = "http://svgur.com/i/AU.svg"
     if url:
         if "://" not in url:
             url = "http://"+url
+    thehash=''
+    uthparams = openanything.fetch(siteName+'/urltohash?url=%s' %(urllib.quote(url)))
+    if uthparams.get('status') == 200:
+        hashinfo = json.loads(uthparams.get('data','[]'))
+        if hashinfo:
+            thehash = hashinfo[0].get('hash','')
     template = JINJA_ENVIRONMENT.get_template('dweb.html')
     vals = { 'url':url, 'proxyurl':'/proxy?url=%s' %(urllib.quote(url)),
-            'urltohash':'/urltohash?url=%s' %(urllib.quote(url)), }
+            'urltohash':'/urltohash?url=%s' %(urllib.quote(url)), 
+            'hashtourl':'/hashtourl/'+thehash,
+            'hasharchive':'https://hash-archive.org/sources/'+thehash,
+            }
     self.response.write(template.render(vals))
 
   def head(self, filename):
