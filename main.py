@@ -172,7 +172,7 @@ class PngHandler(webapp2.RequestHandler):
     self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
 
 class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
-  def get(self, filename):
+  def get(self, filename, isHead=False):
     bits= filename.split('.')
     key = bits[0]
     extension = '.svg'
@@ -182,10 +182,18 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
     resource = int(newbase60.sxgtonum(urllib.unquote(key)))
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
-    blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
-    self.send_blob(blob_info)
+    etag = pages[0].getHash().encode('utf8')
+    self.response.headers["Etag"] = etag
+    self.response.headers["Cache-Control"]="public, max-age=315360000"
+    if self.request.headers.get('If-None-Match','') == etag:
+        self.response.status_int = 304
+        self.response.status_message = "Not Modified"
+        self.response.status = "304 Not Modified"
+    elif not isHead:
+        blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
+        self.send_blob(blob_info)
   def head(self, filename):
-    self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
+    self.get(filename,isHead=True)
     
 class FrameHandler(blobstore_handlers.BlobstoreDownloadHandler):
   def get(self, filename):
