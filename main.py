@@ -20,6 +20,7 @@ import logging
 import cloudstorage as gcs
 import urlparse
 import openanything
+import datetime
 from google.appengine.api import urlfetch
 
 
@@ -184,14 +185,20 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
     pages = qry.fetch(1)
     etag = pages[0].getHash().encode('utf8')
     self.response.headers["Etag"] = etag
+    self.response.headers["x-wtf"] = "can I not set etag?"
     self.response.headers["Cache-Control"]="public, max-age=315360000"
+    self.response.headers["Content-Type"]= 'image/svg+xml'
     if self.request.headers.get('If-None-Match','') == etag:
         self.response.status_int = 304
         self.response.status_message = "Not Modified"
         self.response.status = "304 Not Modified"
+        self.response.out.write('')
     elif not isHead:
         blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
         self.send_blob(blob_info)
+    else:
+        self.response.out.write('')
+
   def head(self, filename):
     self.get(filename,isHead=True)
     
@@ -290,7 +297,40 @@ class UrlToHashHandler(webapp2.RequestHandler):
         self.response.set_status(404)
         self.response.write(template.render(svgVals))
 
-        
+def Base32toBase64(s):
+    return base64.b64encode(base64.b32decode(s))
+    
+
+class ArchiveUrlToHashHandler(webapp2.RequestHandler):
+  def get(self):
+    url=self.request.get('url',"")
+    if url:
+        if "://" not in url:
+            url = "http://"+url
+    filename = urlparse.urlsplit(url).path.split('/')[-1]
+    bits= filename.split('.')
+    key = bits[0]
+    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    logging.info("ArchiveUrlToHashHandler url: '%s' " %(url))
+    uthparams = openanything.fetch('http://web.archive.org/cdx/search/cdx?url=%s' %(urllib.quote(url)))
+    logging.info("ArchiveUrlToHashHandler urltohash: '%s' status: '%s' " %(uthparams.get('data','uh oh'),uthparams.get('status','?')))
+    #format is com,svgur)/i/au.svg 20160829212327 http://svgur.com/i/AU.svg image/svg+xml 200 LY7RXMB7SLQLKEB63LGFNYY7F3SYRCNQ 3079
+    output=[]
+    for line in uthparams.get('data','').splitlines():
+        qpath,fetchdate,foundurl,mimetype,result,base32hash,length = line.split(' ')
+        if result == '200':
+            output.append({'url':foundurl,'hash':'sha1-%s' % (Base32toBase64(base32hash)), 'date':datetime.datetime.strptime(fetchdate,'%Y%m%d%H%M%S').isoformat()})
+    if output:
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.write(json.dumps(output))
+    else:
+        template = JINJA_ENVIRONMENT.get_template('errorpage.html')
+        svgVals = { 'error':"No url here like '%s'" % url }
+        self.response.set_status(404)
+        self.response.write(template.render(svgVals))
+
+
+
 class HashToUrlHandler(webapp2.RequestHandler):
   def get(self, hash):
     logging.info("HashToUrlHandler hash: '%s'" %(hash))
@@ -363,6 +403,9 @@ class DwebHandler(webapp2.RequestHandler):
     template = JINJA_ENVIRONMENT.get_template('dweb.html')
     vals = { 'url':url, 'proxyurl':'/proxy?url=%s' %(urllib.quote(url)),
             'urltohash':'/urltohash?url=%s' %(urllib.quote(url)), 
+            'iaurltohashraw':'http://web.archive.org/cdx/search/cdx?url=%s' %(urllib.quote(url)), 
+            'iaurltohash':'/iaurltohash?url=%s' %(urllib.quote(url)), 
+            'haurltohash':'https://hash-archive.org/history/%s' %(url), 
             'hashtourl':'/hashtourl/'+thehash,
             'hasharchive':'https://hash-archive.org/sources/'+thehash,
             }
@@ -382,6 +425,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/raw/([^/]+)?', RawServeHandler),
                                ('/idtohash/([^/]+)?', IdToHashHandler),
                                ('/urltohash', UrlToHashHandler),
+                               ('/iaurltohash', ArchiveUrlToHashHandler),
                                ('/hashtourl/(.+)', HashToUrlHandler),
                                ('/getbyhash/(.+)?', GetbyHashHandler),
                                ('/proxy', ProxyHandler),

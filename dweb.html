@@ -26,9 +26,14 @@
   <p> this is loaded direct from the site by URL.
   <div class="picframe" id="direct"><img id="svg" class="u-photo" src="{{url}}" /></div>
   <h3>url to hash</h3>
-  <p>This is looking up with the <a href="{{urltohash}}">urltohash endpoint</a>, showing that we do have a hash for this url
+  <p>This is looking up with this site's <a href="{{urltohash}}">urltohash endpoint</a>, showing that we do have a hash for this url
    <div class="picframe" id="urltohash"><iframe src="{{urltohash}}" /></iframe></div>
-  <h3>hash to url</h3>
+ <p>This is looking up with Internet Archive <a href="{{iaurltohashraw}}">urltohash endpoint</a>, showing that they have a hash for this url too
+   <div class="picframe" id="urltohash"><iframe src="{{iaurltohashraw}}" /></iframe></div>
+ <p>This is my translation of the  Internet Archive <a href="{{iaurltohash}}">urltohash endpoint</a>, showing it in a common format.
+   <div class="picframe" id="urltohash"><iframe src="{{iaurltohash}}" /></iframe></div>
+ <p>This is a hasharchive lookup of that URL <a href="{{haurltohash}}">urltohash endpoint</a>, showing the hash is there too.
+   <div class="picframe" id="urltohash"><iframe src="{{haurltohash}}" /></iframe></div>
   <p>This is looking up from the hash with the <a href="{{hashtourl}}">hashtourl endpoint</a> to find a url
    <div class="picframe" id="hashtourl"><iframe src="{{hashtourl}}" /></iframe></div>
   <h3>via hash</h3>
