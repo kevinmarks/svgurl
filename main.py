@@ -184,8 +184,8 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
     etag = pages[0].getHash().encode('utf8')
-    self.response.headers["Etag"] = etag
-    self.response.headers["x-wtf"] = "can I not set etag?"
+    self.response.headers["Etag"] = '%s' % etag
+    logging.info("ServeHandler file: '%s' ETag '%s'" %(filename, self.response.headers["Etag"]))
     self.response.headers["Cache-Control"]="public, max-age=315360000"
     self.response.headers["Content-Type"]= 'image/svg+xml'
     if self.request.headers.get('If-None-Match','') == etag:
@@ -198,8 +198,8 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
         self.send_blob(blob_info)
     else:
         self.response.out.write('')
-
   def head(self, filename):
+    logging.info("ServeHandler head file: '%s' " %(filename))
     self.get(filename,isHead=True)
     
 class FrameHandler(blobstore_handlers.BlobstoreDownloadHandler):
@@ -240,6 +240,8 @@ class SvgHandler(webapp2.RequestHandler):
     pages = qry.fetch(1)
     svgStr = newbase60.numtosxg(resource)
     if pages:
+        etag = pages[0].getHash().encode('utf8')
+        self.response.headers["Etag"] = '%s' % etag
         template = JINJA_ENVIRONMENT.get_template('svgpage.html')
         svgVals = { 'name':pages[0].name,
                     'summary':pages[0].summary,
