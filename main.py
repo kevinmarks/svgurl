@@ -64,7 +64,7 @@ class SvgPage(ndb.Model):
         if kind=='hash':
             link ="/getbyhash/%s" % (self.getHash())
         else:
-            pattern = {'iframe':'/f/%s', 'direct':'/i/%s.svg', 'png':'/i/%s.svg'}.get(kind,'/s/%s')
+            pattern = {'iframe':'/f/%s', 'direct':'/i/%s.svg', 'png':'/p/%s.png'}.get(kind,'/s/%s')
             link = pattern % (svgStr)
         if absolute:
             link = siteName+link
