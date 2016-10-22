@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 {% autoescape true %}
 <html>
-<head><title>svgur.com - share SVG vector files</title>
+<head><title>svgshare.com - share SVG vector files</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="webmention" href="https://webmention.herokuapp.com/api/webmention" />
 <link href="/static/style.css" media="all" rel="stylesheet" type="text/css" />
 </head>  
 <body >
-  <nav class="h-card"><h1 class="p-name">svgur</h1> <span="p-summary">Upload, embed and share SVG vector files</span></nav>
+  <nav class="h-card"><h1><img class="logo u-logo" src="/static/sharelogo.svg"/>svgshare</h1> <span="p-summary">Upload, embed and share SVG vector files</span></nav>
   <form id=filereader action="{{upload_url}}" method="POST" enctype="multipart/form-data">
     <input class="choosesvg hidafter" id=file type="file" accept=".svg, image/svg+xml" name="file" value="Choose SVG">
     <div class="hidfirst "><input type="text" name="name" placeholder="Name it"></div>
@@ -32,7 +32,8 @@
     url = document.querySelectorAll ? document.querySelectorAll("link[rel~=canonical]") : false;
     url = url && url[0] ? url[0].href : false;
     sn.type = "text/javascript"; sn.async = true;
-    sn.src = "//webmention.herokuapp.com/api/embed?version=cutting-edge&url=" + encodeURIComponent(url || window.location);
+    sn.src = "//webmention.herokuapp.com/api/embed?version=cutting-edge&url=" + encodeURIComponent(url || window.location)
+    +"&url=" + encodeURIComponent("http://svgur.com");
     s.parentNode.insertBefore(sn, s);
   }());
 </script>
