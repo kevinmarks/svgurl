@@ -25,11 +25,11 @@ from google.appengine.api import urlfetch
 
 
 if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
-    siteName = "http://svgur.com"
+    siteName = "http://svgshare.com"
 else:
     siteName = "http://localhost:10080"
 svgcounter = increment.Increment("svg-id", 10)
-
+oldSiteName = "http://svgur.com"
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
@@ -59,7 +59,7 @@ class SvgPage(ndb.Model):
             self.svghash = "sha1-%s" % (base64.b64encode(digest))
             self.put() # write back hash
         return self.svghash
-    def getLink(self, kind="image",absolute=True):
+    def getLink(self, kind="image",absolute=True,site=siteName):
         svgStr = newbase60.numtosxg(self.svgid)
         if kind=='hash':
             link ="/getbyhash/%s" % (self.getHash())
@@ -67,7 +67,7 @@ class SvgPage(ndb.Model):
             pattern = {'iframe':'/f/%s', 'direct':'/i/%s.svg', 'png':'/p/%s.png'}.get(kind,'/s/%s')
             link = pattern % (svgStr)
         if absolute:
-            link = siteName+link
+            link = site+link
         return link
     
 class MainHandler(webapp2.RequestHandler):
@@ -251,6 +251,7 @@ class SvgHandler(webapp2.RequestHandler):
                     }
         for kind in ('image','iframe','direct','png','hash'):
             svgVals[kind+"_link"] = pages[0].getLink(kind)
+            svgVals["old_link"] = pages[0].getLink('image',site=oldSiteName)
         self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"'
     else:
         template = JINJA_ENVIRONMENT.get_template('errorpage.html')
