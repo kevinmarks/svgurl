@@ -78,6 +78,8 @@ class MainHandler(webapp2.RequestHandler):
     recentpix=qry.fetch(60)
     pix = [ {"name":"%s" % page.name, "svgid":newbase60.numtosxg(page.svgid),"published":page.published} for page in recentpix]
     self.response.write(template.render({'upload_url':upload_url, 'pix':pix}))
+  def head(self):
+    self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"'
 
 class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
   def post(self):
