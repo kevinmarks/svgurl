@@ -51,6 +51,7 @@ class SvgPage(ndb.Model):
     name = ndb.StringProperty(indexed=True)
     summary = ndb.StringProperty(indexed=False)
     svghash = ndb.StringProperty(indexed=True) # sha1 hash of svg
+    nipsa = ndb.BooleanProperty(indexed=True, default=False) #Don't show on front page
     def getHash(self, hashtype='sha1'):
         """Make a SubResource Integrity compatible hash, but using sha1 by default as they exist."""
         if not self.svghash:
@@ -75,8 +76,9 @@ class MainHandler(webapp2.RequestHandler):
     upload_url = blobstore.create_upload_url('/upload')
     template = JINJA_ENVIRONMENT.get_template('homepage.html')
     qry = SvgPage.query().order(-SvgPage.published)
-    recentpix=qry.fetch(60)
-    pix = [ {"name":"%s" % page.name, "svgid":newbase60.numtosxg(page.svgid),"published":page.published} for page in recentpix]
+    recentpix=qry.fetch(100)
+    
+    pix = [ {"name":"%s" % page.name, "svgid":newbase60.numtosxg(page.svgid),"published":page.published} for page in recentpix if page.nipsa !=True ][:60]
     self.response.write(template.render({'upload_url':upload_url, 'pix':pix}))
   def head(self):
     self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"'
