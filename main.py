@@ -189,6 +189,8 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
     qry = SvgPage.query(SvgPage.svgid == resource)
     pages = qry.fetch(1)
     etag = pages[0].getHash().encode('utf8')
+    if pages[0].nipsa:
+        etag = etag +" nope"
     self.response.headers["Etag"] = '%s' % etag
     logging.info("ServeHandler file: '%s' ETag '%s'" %(filename, self.response.headers["Etag"]))
     self.response.headers["Cache-Control"]="public, max-age=315360000"
@@ -201,9 +203,21 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
     elif not isHead:
         blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
         #self.send_blob(blob_info)
-        reader = blobstore.BlobReader(blob_info)
-        rawsvg = reader.read().decode('utf-8')
-        self.response.out.write(svgfix.svgfix(rawsvg))
+        try:
+            reader = blobstore.BlobReader(blob_info)
+            rawsvg = reader.read().decode('utf-8')
+            fixedsvg,hadScript = svgfix.svgfix(rawsvg)
+            if (hadScript):
+                 pages[0].nipsa = True
+                 pages[0].put()
+                 logging.info("nipsa'd for script: '%s' " %(filename))
+            self.response.out.write(fixedsvg)
+        except:
+            pages[0].nipsa = True
+            pages[0].put()
+            logging.info("nipsa'd for bad file: '%s' " %(filename))
+            logging.info("bad file: '%s' " %(filename))
+            self.response.out.write('<svg xmlns="http://www.w3.org/2000/svg" width="40px" height="40px" style="vertical-align:text-bottom"  viewbox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="darkred" stroke="red" stroke-width="3"/><path d="M 10,10 30,30 M 10,30 30,10" fill="none" stroke="white" stroke-width="6"/></svg>')
     else:
         self.response.out.write('')
   def head(self, filename):
