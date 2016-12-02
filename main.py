@@ -21,6 +21,7 @@ import cloudstorage as gcs
 import urlparse
 import openanything
 import datetime
+import svgfix
 from google.appengine.api import urlfetch
 
 
@@ -199,7 +200,10 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
         self.response.out.write('')
     elif not isHead:
         blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
-        self.send_blob(blob_info)
+        #self.send_blob(blob_info)
+        reader = blobstore.BlobReader(blob_info)
+        rawsvg = reader.read().decode('utf-8')
+        self.response.out.write(svgfix.svgfix(rawsvg))
     else:
         self.response.out.write('')
   def head(self, filename):
