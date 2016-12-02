@@ -208,10 +208,12 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
             rawsvg = reader.read().decode('utf-8')
             fixedsvg,hadScript = svgfix.svgfix(rawsvg)
             if (hadScript):
-                 pages[0].nipsa = True
-                 pages[0].put()
-                 logging.info("nipsa'd for script: '%s' " %(filename))
-            self.response.out.write(fixedsvg)
+                pages[0].nipsa = True
+                pages[0].put()
+                logging.info("nipsa'd for script: '%s' " %(filename))
+                self.response.out.write(fixedsvg)
+            else:
+                self.send_blob(blob_info)
         except:
             pages[0].nipsa = True
             pages[0].put()
