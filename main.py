@@ -98,7 +98,37 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     page.put()
     self.redirect('/s/%s' % newbase60.numtosxg(page.svgid))
     taskqueue.add(url='/makepingfromsvg/%s' % newbase60.numtosxg(page.svgid))
+    taskqueue.add(url='/sendsvgtoarchive/%s' % newbase60.numtosxg(page.svgid))
     
+class ArchiveHandler(webapp2.RequestHandler):
+  def post(self, filename):
+    status="pending"
+    bits= filename.split('.')
+    key = bits[0]
+    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    qry = SvgPage.query(SvgPage.svgid == resource)
+    pages = qry.fetch(1)
+    page=None
+    if len(pages)>0:
+        page = pages[0]
+    if not page:
+        status="no such svg"
+    else:
+        urlbits= list(urlparse.urlsplit(self.request.uri))
+        urlbits[2] = '/s/'+key
+        urlbits[3] = ''
+        svgurl= urlparse.urlunsplit(urlbits)
+        url = "https://web.archive.org/save/" + svgurl
+        logging.info("ArchiveHandler save url is '%s' " % url)
+        urlfetch.set_default_fetch_deadline(180)
+        result = urlfetch.fetch(url)
+        if result.status_code == 200:
+          status="saved to archive.org"
+        else:
+            status="error from service: %s" %(result.status_code)
+    logging.info("ArchiveHandler "+ key +" status: " + status)
+    self.response.write("ArchiveHandler "+ key +" status: " + status) 
+
 class PngFromSvgHandler(webapp2.RequestHandler):
   def post(self, filename):
     status="pending"
@@ -449,6 +479,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/f/([^/]+)?', FrameHandler),
                                ('/p/([^/]+)?', PngHandler),
                                ('/makepingfromsvg/([^/]+)?', PngFromSvgHandler),
+                               ('/sendsvgtoarchive/([^/]+)?', ArchiveHandler),
                                ('/raw/([^/]+)?', RawServeHandler),
                                ('/idtohash/([^/]+)?', IdToHashHandler),
                                ('/urltohash', UrlToHashHandler),
