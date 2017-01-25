@@ -468,7 +468,7 @@ class DwebHandler(webapp2.RequestHandler):
             }
     self.response.write(template.render(vals))
 
-  def head(self, filename):
+  def head(self):
     self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
     
 
