@@ -340,10 +340,14 @@ class UrlToHashHandler(webapp2.RequestHandler):
     filename = urlparse.urlsplit(url).path.split('/')[-1]
     bits= filename.split('.')
     key = bits[0]
-    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    resource = newbase60.sxgtonum(urllib.unquote(key))
     logging.info("UrlToHashHandler url: '%s', file: '%s' key:'%s' resource:'%s'" %(url,filename,key,resource))
-    qry = SvgPage.query(SvgPage.svgid == resource)
-    pages = qry.fetch(1)
+    
+    try: 
+        qry = SvgPage.query(SvgPage.svgid == resource)
+        pages = qry.fetch(1)
+    except:
+        pages=None
     if pages:
         output = [{'url':pages[0].getLink('direct'),'hash':pages[0].getHash(), 'date':pages[0].published.isoformat()}]
         self.response.headers['Content-Type'] = 'application/json'
