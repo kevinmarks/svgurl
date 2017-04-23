@@ -297,12 +297,14 @@ class RawServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
 
 class SvgHandler(webapp2.RequestHandler):
   def get(self, filename):
-    bits= filename.split('.')
-    key = bits[0]
-    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
-    qry = SvgPage.query(SvgPage.svgid == resource)
-    pages = qry.fetch(1)
-    svgStr = newbase60.numtosxg(resource)
+    pages= []
+    if filename:
+        bits= filename.split('.')
+        key = bits[0]
+        resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+        qry = SvgPage.query(SvgPage.svgid == resource)
+        pages = qry.fetch(1)
+        svgStr = newbase60.numtosxg(resource)
     if pages:
         etag = pages[0].getHash().encode('utf8')
         self.response.headers["Etag"] = '%s' % etag
