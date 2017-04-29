@@ -15,6 +15,7 @@ from google.appengine.api import urlfetch
 from google.appengine.api import taskqueue
 import hashlib
 import json
+from google.appengine.api import users
 
 import logging
 import cloudstorage as gcs
@@ -80,7 +81,7 @@ class MainHandler(webapp2.RequestHandler):
     recentpix=qry.fetch(100)
     
     pix = [ {"name":"%s" % page.name, "svgid":newbase60.numtosxg(page.svgid),"published":page.published} for page in recentpix if page.nipsa !=True ][:60]
-    self.response.write(template.render({'upload_url':upload_url, 'pix':pix}))
+    self.response.write(template.render({'upload_url':upload_url, 'pix':pix, 'admin':users.is_current_user_admin()}))
   def head(self):
     self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"'
 
@@ -261,6 +262,25 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
         svgVals = { 'error':"No such image as %s" % filename }
         self.response.set_status(404)
         self.response.write(template.render(svgVals))
+
+class NipsaHandler(webapp2.RequestHandler):
+  def post(self, filename, ):
+    bits= filename.split('.')
+    key = bits[0]
+    extension = '.svg'
+    if len(bits)>1:
+        extension = bits[1] #awaiting conditional code for png/jpg
+    resource = newbase60.sxgtonum(urllib.unquote(key))
+    try: 
+        qry = SvgPage.query(SvgPage.svgid == resource)
+        pages = qry.fetch(1)
+    except:
+        pages=None
+    if pages:
+        pages[0].nipsa = True
+        pages[0].put()
+        logging.info("nipsa'd by hand: '%s' " %(filename))
+        self.redirect('/')
 
   def head(self, filename):
     logging.info("ServeHandler head file: '%s' " %(filename))
@@ -487,7 +507,10 @@ class DwebHandler(webapp2.RequestHandler):
   def head(self):
     self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
     
-
+class LoginHandler(webapp2.RequestHandler):
+  def get(self):
+    self.response.write('<a href="' + users.create_login_url('/') +'">login</a>')
+    
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/s/([^/]+)?', SvgHandler),
                                ('/upload', UploadHandler),
@@ -504,5 +527,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/getbyhash/(.+)?', GetbyHashHandler),
                                ('/proxy', ProxyHandler),
                                ('/dweb', DwebHandler),
+                               ('/login', LoginHandler),
+                               ('/nipsa/([^/]+)?', NipsaHandler),
                                ],
                               debug=True)
