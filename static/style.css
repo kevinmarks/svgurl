@@ -24,7 +24,8 @@ hr {clear:left;}
 footer {clear:left;}
 .pngdata {display:none}
 img,video {max-width: 98vw;} 
-form#nipsa {margin-top: -2em};
+form#nipsa {margin-top: -2em;}
+
 .webmention-author img {height: 3em; float:left; margin:.25em;}
 .webmention-mention { margin:.5em; background-color: linen;}
 .webmention-facepile > li {
