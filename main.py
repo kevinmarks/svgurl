@@ -16,6 +16,7 @@ from google.appengine.api import taskqueue
 import hashlib
 import json
 from google.appengine.api import users
+import binascii
 
 import logging
 import cloudstorage as gcs
@@ -53,15 +54,21 @@ class SvgPage(ndb.Model):
     name = ndb.StringProperty(indexed=True)
     summary = ndb.StringProperty(indexed=False)
     svghash = ndb.StringProperty(indexed=True) # sha1 hash of svg
+    svghash256 = ndb.StringProperty(indexed=True) # sha256 hash of svg
     nipsa = ndb.BooleanProperty(indexed=True, default=False) #Don't show on front page
     def getHash(self, hashtype='sha1'):
         """Make a SubResource Integrity compatible hash, but using sha1 by default as they exist."""
+        if not self.svghash256:
+            blob_reader = blobstore.BlobReader(self.svgBlob)
+            digest = hashlib.sha256(blob_reader.read()).digest()
+            self.svghash256 = "sha256-%s" % (base64.b64encode(digest))
+            self.put() # write back hash
         if not self.svghash:
             blob_reader = blobstore.BlobReader(self.svgBlob)
             digest = hashlib.sha1(blob_reader.read()).digest()
             self.svghash = "sha1-%s" % (base64.b64encode(digest))
             self.put() # write back hash
-        return self.svghash
+        return "%s %s" % (self.svghash,self.svghash256)
     def getLink(self, kind="image",absolute=True,site=siteName):
         svgStr = newbase60.numtosxg(self.svgid)
         if kind=='hash':
@@ -100,7 +107,8 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     self.redirect('/s/%s' % newbase60.numtosxg(page.svgid))
     taskqueue.add(url='/makepingfromsvg/%s' % newbase60.numtosxg(page.svgid))
     taskqueue.add(url='/sendsvgtoarchive/%s' % newbase60.numtosxg(page.svgid))
-    
+    taskqueue.add(url='/sendsvgtoseedstamp/%s' % newbase60.numtosxg(page.svgid))
+
 class ArchiveHandler(webapp2.RequestHandler):
   def post(self, filename):
     status="pending"
@@ -129,6 +137,36 @@ class ArchiveHandler(webapp2.RequestHandler):
             status="error from service: %s" %(result.status_code)
     logging.info("ArchiveHandler "+ key +" status: " + status)
     self.response.write("ArchiveHandler "+ key +" status: " + status) 
+
+class SeedStampHandler(webapp2.RequestHandler):
+  def post(self, filename):
+    status="pending"
+    bits= filename.split('.')
+    key = bits[0]
+    resource = int(newbase60.sxgtonum(urllib.unquote(key)))
+    qry = SvgPage.query(SvgPage.svgid == resource)
+    pages = qry.fetch(1)
+    page=None
+    if len(pages)>0:
+        page = pages[0]
+    if not page:
+        status="no such svg"
+    else:
+        hash =page.getHash()
+        hash256 = binascii.hexlify(base64.b64decode(hash.split('sha256-')[-1]))
+        json_data = '{"hash":"%s"}' % (hash256)
+        headers = {'Content-Type': 'application/json'}
+        result = urlfetch.fetch(
+            url = 'http://34.253.191.188/api/v1/stamp',
+            payload=json_data,
+            method=urlfetch.POST,
+            headers=headers)
+        if result.status_code == 200:
+            status="stamped by seed media %s returned %s" % (json_data,result.content)
+        else:
+            status="error from service: %s" %(result.status_code)
+    logging.info("SeedStampHandler "+ key +" status: " + status)
+    self.response.write("SeedStampHandler "+ key +" status: " + status) 
 
 class PngFromSvgHandler(webapp2.RequestHandler):
   def post(self, filename):
@@ -262,6 +300,9 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
         svgVals = { 'error':"No such image as %s" % filename }
         self.response.set_status(404)
         self.response.write(template.render(svgVals))
+  def head(self, filename):
+    logging.info("ServeHandler head file: '%s' " %(filename))
+    self.get(filename,isHead=True)
 
 class NipsaHandler(webapp2.RequestHandler):
   def post(self, filename, ):
@@ -282,9 +323,6 @@ class NipsaHandler(webapp2.RequestHandler):
         logging.info("nipsa'd by hand: '%s' " %(filename))
         self.redirect('/')
 
-  def head(self, filename):
-    logging.info("ServeHandler head file: '%s' " %(filename))
-    self.get(filename,isHead=True)
     
 class FrameHandler(blobstore_handlers.BlobstoreDownloadHandler):
   def get(self, filename):
@@ -425,8 +463,11 @@ class ArchiveUrlToHashHandler(webapp2.RequestHandler):
 
 
 class HashToUrlHandler(webapp2.RequestHandler):
-  def get(self, hash):
-    logging.info("HashToUrlHandler hash: '%s'" %(hash))
+  def get(self, hashes):
+    logging.info("HashToUrlHandler hashes: '%s'" %(hashes))
+    hashlist = hashes.split()
+    hash = hashlist[0]
+    
     qry = SvgPage.query(SvgPage.svghash == hash)
     pages = qry.fetch(10)
     output= []
@@ -519,6 +560,7 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/p/([^/]+)?', PngHandler),
                                ('/makepingfromsvg/([^/]+)?', PngFromSvgHandler),
                                ('/sendsvgtoarchive/([^/]+)?', ArchiveHandler),
+                               ('/sendsvgtoseedstamp/([^/]+)?', SeedStampHandler),
                                ('/raw/([^/]+)?', RawServeHandler),
                                ('/idtohash/([^/]+)?', IdToHashHandler),
                                ('/urltohash', UrlToHashHandler),
