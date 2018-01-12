@@ -28,7 +28,7 @@ from google.appengine.api import urlfetch
 
 
 if os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/'):
-    siteName = "http://svgshare.com"
+    siteName = "https://svgshare.com"
 else:
     siteName = "http://localhost:10080"
 svgcounter = increment.Increment("svg-id", 10)
@@ -107,7 +107,7 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     self.redirect('/s/%s' % newbase60.numtosxg(page.svgid))
     taskqueue.add(url='/makepingfromsvg/%s' % newbase60.numtosxg(page.svgid))
     taskqueue.add(url='/sendsvgtoarchive/%s' % newbase60.numtosxg(page.svgid))
-    taskqueue.add(url='/sendsvgtoseedstamp/%s' % newbase60.numtosxg(page.svgid))
+    #taskqueue.add(url='/sendsvgtoseedstamp/%s' % newbase60.numtosxg(page.svgid))
 
 class ArchiveHandler(webapp2.RequestHandler):
   def post(self, filename):
