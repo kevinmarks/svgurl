@@ -9,6 +9,7 @@ import webapp2
 import increment
 import newbase60
 import base64
+import time
 from google.appengine.api import files
 from google.appengine.api import app_identity
 from google.appengine.api import urlfetch
@@ -43,11 +44,13 @@ from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import ndb
 from google.appengine.api import images
 
+badSVG='<svg xmlns="http://www.w3.org/2000/svg" width="40px" height="40px" style="vertical-align:text-bottom"  viewbox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="darkred" stroke="red" stroke-width="3"/><path d="M 10,10 30,30 M 10,30 30,10" fill="none" stroke="white" stroke-width="6"/></svg>'
 
 class SvgPage(ndb.Model):
     """Models an individual svg page."""
     svgid = ndb.IntegerProperty(indexed=True)
     svgBlob = ndb.BlobKeyProperty(indexed=True)
+    svgFile = ndb.StringProperty(indexed=False)
     pngBlob = ndb.BlobKeyProperty(indexed=True)
     pngFile = ndb.StringProperty(indexed=False)
     published = ndb.DateTimeProperty(auto_now_add=True)
@@ -56,6 +59,8 @@ class SvgPage(ndb.Model):
     svghash = ndb.StringProperty(indexed=True) # sha1 hash of svg
     svghash256 = ndb.StringProperty(indexed=True) # sha256 hash of svg
     nipsa = ndb.BooleanProperty(indexed=True, default=False) #Don't show on front page
+    badfile =  ndb.BooleanProperty(indexed=True, default=False)
+    scriptchecked =  ndb.BooleanProperty(indexed=True, default=False)
     def getHash(self, hashtype='sha1'):
         """Make a SubResource Integrity compatible hash, but using sha1 by default as they exist."""
         if not self.svghash256:
@@ -248,21 +253,23 @@ class PngHandler(webapp2.RequestHandler):
 
 class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
   def get(self, filename, isHead=False):
+    starttime = time.time()
     bits= filename.split('.')
-    key = bits[0]
+    key = urllib.unquote(bits[0])
     extension = '.svg'
     if len(bits)>1:
         extension = bits[1] #awaiting conditional code for png/jpg
     self.response.headers["Link"] = '<https://webmention.herokuapp.com/api/webmention>; rel="webmention"' 
-    resource = newbase60.sxgtonum(urllib.unquote(key))
+    resource = newbase60.sxgtonum(key)
     try: 
         qry = SvgPage.query(SvgPage.svgid == resource)
         pages = qry.fetch(1)
     except:
         pages=None
     if pages:
-        etag = pages[0].getHash().encode('utf8')
-        if pages[0].nipsa:
+        page = pages[0]
+        etag = page.getHash().encode('utf8')
+        if page.nipsa:
             etag = etag +" nope"
         self.response.headers["Etag"] = '%s' % etag
         logging.info("ServeHandler file: '%s' ETag '%s'" %(filename, self.response.headers["Etag"]))
@@ -274,25 +281,52 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
             self.response.status = "304 Not Modified"
             self.response.out.write('')
         elif not isHead:
-            blob_info = blobstore.BlobInfo.get(pages[0].svgBlob)
+            if page.badfile:
+                self.response.out.write(badSVG)
+                return
+            blob_info = blobstore.BlobInfo.get(page.svgBlob)
             #self.send_blob(blob_info)
             try:
                 reader = blobstore.BlobReader(blob_info)
                 rawsvg = reader.read().decode('utf-8')
-                fixedsvg,hadScript = svgfix.svgfix(rawsvg)
-                if (hadScript):
-                    pages[0].nipsa = True
-                    pages[0].put()
-                    logging.info("nipsa'd for script: '%s' " %(filename))
-                    self.response.out.write(fixedsvg)
+                if not page.scriptchecked:
+                    fixedsvg,hadScript = svgfix.svgfix(rawsvg)
+                    postparse = time.time()
+                    logging.info("postparse time: '%s' " %(postparse-starttime))
+                    if (hadScript):
+                        page.nipsa = True
+                        bucket_name = os.environ.get('BUCKET_NAME',
+                                                     app_identity.get_default_gcs_bucket_name())
+                        filename = '/' + bucket_name + '/s/%sfix.svg' % key
+                        gcs_file = gcs.open(filename, 'w', content_type='image/svg+xml')
+                        gcs_file.write(fixedsvg.encode('utf-8'))
+                        gcs_file.close()
+                        # Get the file's blob key
+                        #page.pngBlob = blobstore.create_gs_key("/gs"+ filename)
+                        page.svgFile =  blobstore.create_gs_key("/gs"+ filename)
+                        page.put()
+                        page.scriptchecked = True
+                        postnipsa = time.time()
+                        logging.info("script nipsa'd time: '%s' " %(postnipsa-starttime))
+                        logging.info("nipsa'd for script: '%s' " %(filename))
+                        self.response.out.write(fixedsvg)
+                    else:
+                        page.scriptchecked = True
+                        page.put()
+                if page.svgFile:
+                    self.redirect(images.get_serving_url(page.svgFile))
                 else:
                     self.send_blob(blob_info)
             except:
-                pages[0].nipsa = True
-                pages[0].put()
+                page.nipsa = True
+                page.scriptchecked = True
+                page.badfile = True
+                page.put()
+                postnipsa = time.time()
+                logging.info("bad nipsa'd time: '%s' " %(postnipsa-starttime))
                 logging.info("nipsa'd for bad file: '%s' " %(filename))
                 logging.info("bad file: '%s' " %(filename))
-                self.response.out.write('<svg xmlns="http://www.w3.org/2000/svg" width="40px" height="40px" style="vertical-align:text-bottom"  viewbox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="darkred" stroke="red" stroke-width="3"/><path d="M 10,10 30,30 M 10,30 30,10" fill="none" stroke="white" stroke-width="6"/></svg>')
+                self.response.out.write(badSVG)
         else:
             self.response.out.write('')
     else:
