@@ -73,7 +73,12 @@ class SvgPage(ndb.Model):
             digest = hashlib.sha1(blob_reader.read()).digest()
             self.svghash = "sha1-%s" % (base64.b64encode(digest))
             self.put() # write back hash
-        return "%s %s" % (self.svghash,self.svghash256)
+        if hashtype=='sha1':
+            return "%s" % (self.svghash)
+        elif hashtype == 'sha256':
+            return "%s" % (self.svghash256)
+        elif hashtype == 'both':
+            return "%s %s" % (self.svghash,self.svghash256)
     def getLink(self, kind="image",absolute=True,site=siteName):
         svgStr = newbase60.numtosxg(self.svgid)
         if kind=='hash':
@@ -106,7 +111,7 @@ class UploadHandler(blobstore_handlers.BlobstoreUploadHandler):
     page.summary = self.request.get('summary',"")
     page.svgBlob=blob_info.key()
     page.svgid = svgcounter.one()
-    hash = page.getHash()
+    hash = page.getHash('both')
     logging.info(" id %s hash '%s'" % (page.svgid,hash))
     page.put()
     self.redirect('/s/%s' % newbase60.numtosxg(page.svgid))
@@ -157,7 +162,7 @@ class SeedStampHandler(webapp2.RequestHandler):
     if not page:
         status="no such svg"
     else:
-        hash =page.getHash()
+        hash =page.getHash('both')
         hash256 = binascii.hexlify(base64.b64decode(hash.split('sha256-')[-1]))
         json_data = '{"hash":"%s"}' % (hash256)
         headers = {'Content-Type': 'application/json'}
@@ -268,7 +273,7 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
         pages=None
     if pages:
         page = pages[0]
-        etag = page.getHash().encode('utf8')
+        etag = page.getHash('both').encode('utf8')
         if page.nipsa:
             etag = etag +" nope"
         self.response.headers["Etag"] = '%s' % etag
@@ -328,6 +333,7 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
                 logging.info("bad file: '%s' " %(filename))
                 self.response.out.write(badSVG)
         else:
+            logging.info("head?: '%s' " %(filename))
             self.response.out.write('')
     else:
         template = JINJA_ENVIRONMENT.get_template('errorpage.svg')
@@ -398,7 +404,7 @@ class SvgHandler(webapp2.RequestHandler):
         pages = qry.fetch(1)
         svgStr = newbase60.numtosxg(resource)
     if pages:
-        etag = pages[0].getHash().encode('utf8')
+        etag = pages[0].getHash('both').encode('utf8')
         self.response.headers["Etag"] = '%s' % etag
         template = JINJA_ENVIRONMENT.get_template('svgpage.html')
         svgVals = { 'name':pages[0].name,
@@ -501,7 +507,7 @@ class HashToUrlHandler(webapp2.RequestHandler):
     logging.info("HashToUrlHandler hashes: '%s'" %(hashes))
     hashlist = hashes.split()
     hash = hashlist[0]
-    
+    logging.info("HashToUrlHandler hash: '%s' " %(hash))
     qry = SvgPage.query(SvgPage.svghash == hash)
     pages = qry.fetch(10)
     output= []
