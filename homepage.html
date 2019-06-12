@@ -24,7 +24,7 @@
  {% if admin %} Careful now{% endif %}</h2>
   <div class="grid">
   {% for pic in pix %}
-  <div class="picframe picgrid h-entry"><span class="e-content"><a class="u-url" title="{{pic.name}}" href="/s/{{pic.svgid}}" ><img class="pixpreview u-photo u-featured p-name" alt="{{pic.name}}" src="/i/{{pic.svgid}}.svg"  /></a><time class="dt-published" datetime="{{pic.published}}"></time></span>
+  <div class="picframe picgrid h-entry"><span class="e-content"><a class="u-url" title="{{pic.name}}" href="/s/{{pic.svgid}}" ><img loading="lazy" class="pixpreview u-photo u-featured p-name" alt="{{pic.name}}" src="/i/{{pic.svgid}}.svg"  /></a><time class="dt-published" datetime="{{pic.published}}"></time></span>
   {% if admin %} <form id=nipsa action="/nipsa/{{pic.svgid}}" method="POST"><input type="submit"  name="nipsa" value="NIPSA"></form>{% endif %}</div>
   {% endfor %}
   </div>
